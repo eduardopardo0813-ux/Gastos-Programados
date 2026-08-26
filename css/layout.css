@@ -1,0 +1,179 @@
+/* ---------- navegación principal (§1.2 / §1.3) ----------
+   Una sola lista de botones en el HTML: en móvil se posiciona fija abajo
+   (patrón WhatsApp/Instagram/apps bancarias), en escritorio vuelve a ser
+   una fila de pestañas arriba. No se duplica la navegación en el DOM. */
+nav.tabs{
+  display:flex;
+  gap:4px;
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));
+  margin:0;
+  background:var(--surface);
+  border-top:1px solid var(--border);
+  position:fixed;
+  left:0;right:0;bottom:0;
+  z-index:40;
+  min-height:var(--nav-mobile-height);
+}
+nav.tabs button{
+  flex:1 1 0;
+  min-width:44px;
+  min-height:44px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  background:transparent;
+  border:none;
+  color:var(--text-secondary);
+  padding:6px 3px;
+  border-radius:10px;
+  font-size:0.68rem;
+  line-height:1.15;
+  font-weight:700;
+  cursor:pointer;
+  white-space:normal;
+}
+nav.tabs button.active{
+  background:rgba(47,104,204,0.16);
+  color:var(--brand-dark);
+}
+/* Categorías y Ajustes: acento neutro incluso activos (§1.4). */
+nav.tabs button[data-tab="categorias"],
+nav.tabs button[data-tab="ajustes"],
+nav.tabs button[data-tab="ahorro-deudas"]{
+  color:var(--text-secondary);
+}
+nav.tabs button[data-tab="categorias"].active,
+nav.tabs button[data-tab="ajustes"].active,
+nav.tabs button[data-tab="ahorro-deudas"].active{
+  background:var(--gridline);
+  color:var(--text-primary);
+}
+
+@media (min-width:721px){
+  body{ padding-bottom:40px; }
+  nav.tabs{
+    position:static;
+    left:auto;right:auto;bottom:auto;
+    display:flex;
+    gap:6px;
+    overflow-x:visible;
+    padding:4px 0 10px;
+    background:transparent;
+    border-top:none;
+    min-height:auto;
+  }
+  nav.tabs button{
+    flex:0 0 auto;
+    min-height:auto;
+    background:var(--surface);
+    border:1px solid var(--border);
+    color:var(--text-secondary);
+    padding:9px 14px;
+    border-radius:999px;
+    font-size:0.88rem;
+    white-space:nowrap;
+    font-weight:600;
+  }
+  nav.tabs button.active{
+    background:var(--brand);
+    border-color:var(--brand);
+    color:#fff;
+  }
+  nav.tabs button[data-tab="categorias"].active,
+  nav.tabs button[data-tab="ajustes"].active,
+  nav.tabs button[data-tab="ahorro-deudas"].active{
+    background:var(--gridline);
+    border-color:var(--border);
+    color:var(--text-primary);
+  }
+}
+
+.panel{display:none;}
+.panel.active{display:block;animation:fade .15s ease;}
+
+/* ---------- sub-navegación dentro de "Programados" y "Ahorro y deudas" ----------
+   Mismo patrón que el toggle de vista del calendario: dos (o más) botones
+   segmentados, sin scroll horizontal, cada uno con su propio acento. */
+.subtabs{display:flex;gap:6px;margin-bottom:14px;}
+.subtabs button{flex:1;}
+.subpanel{display:none;}
+.subpanel.active{display:block;animation:fade .15s ease;}
+
+/* Resumen del mes (§3): "Gastado este mes" + "Pendiente por pagar". */
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px;}
+
+/* separador con etiqueta entre el bloque de gastos diarios y el de
+   pagos programados en Inicio (§2/§3): el usuario debe notar sin esfuerzo
+   que está pasando de "lo que ya gasté" a "lo que tengo que pagar". */
+.section-divider{
+  display:flex;align-items:center;gap:10px;
+  margin:20px 0 10px;color:var(--muted);font-size:0.76rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;
+}
+.section-divider::after{content:'';flex:1;height:1px;background:var(--gridline);}
+
+/* grilla de registro rápido de gastos diarios (§2.2) */
+.daily-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;}
+@media (min-width:640px){ .daily-grid{grid-template-columns:repeat(3,1fr);} }
+@media (min-width:900px){ .daily-grid{grid-template-columns:repeat(4,1fr);} }
+
+/* gráficos interactivos de Inicio: chanchito de ahorro, bolsa de gastos y bolsa de deudas */
+.overview-graphics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;}
+@media (max-width:520px){ .overview-graphics{grid-template-columns:1fr;} }
+
+.form-row{display:flex;gap:10px;flex-wrap:wrap;}
+.form-row > div{flex:1;min-width:150px;}
+.form-actions{display:flex;gap:8px;margin-top:6px;}
+.radio-group{display:flex;gap:14px;flex-wrap:wrap;}
+.radio-group label{display:flex;align-items:center;gap:6px;font-weight:500;font-size:0.88rem;}
+.radio-group input{width:auto;}
+
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.filters select{width:auto;min-width:140px;}
+
+/* calendario */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;flex-wrap:wrap;}
+.cal-nav .title{font-weight:700;font-size:1rem;text-transform:capitalize;}
+.cal-nav-btns{display:flex;gap:6px;}
+.view-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.view-toggle button{flex:1;}
+
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.cal-dow{font-size:0.7rem;color:var(--muted);text-align:center;padding:2px 0;font-weight:600;}
+.cal-cell{
+  min-height:64px;border:1px solid var(--gridline);border-radius:8px;
+  padding:4px;cursor:pointer;background:var(--surface-2);display:flex;flex-direction:column;gap:3px;
+}
+.cal-cell.outside{background:var(--page);opacity:0.5;}
+.cal-cell.today{border-color:var(--brand);border-width:2px;}
+.cal-cell .daynum{font-size:0.78rem;font-weight:600;}
+.cal-dots{display:flex;flex-wrap:wrap;gap:3px;}
+@media (max-width:520px){
+  .cal-cell{min-height:48px;padding:3px;}
+  .cal-cell .daynum{font-size:0.7rem;}
+}
+
+.week-day-card{margin-bottom:10px;}
+.week-day-card .wd-header{font-weight:700;font-size:0.88rem;margin-bottom:6px;text-transform:capitalize;display:flex;justify-content:space-between;}
+
+/* ahorro programado (subpanel dentro de "Ahorro y deudas") */
+#subpanel-ahorro{
+  background:linear-gradient(180deg,var(--ahorro-bg-1),var(--ahorro-bg-2));
+  border:1px solid var(--ahorro-border);
+  border-radius:18px;
+  padding:14px;
+}
+#subpanel-ahorro .card{background:var(--surface-2);}
+.ahorro-card-top{display:flex;align-items:center;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+.ahorro-ring{flex:0 0 auto;}
+.ahorro-card-info{flex:1;min-width:160px;}
+
+/* deudas (subpanel dentro de "Ahorro y deudas") */
+#subpanel-deudas{
+  background:linear-gradient(180deg,var(--deuda-bg-1),var(--deuda-bg-2));
+  border:1px solid var(--deuda-border);
+  border-radius:18px;
+  padding:14px;
+}
+#subpanel-deudas .card{background:var(--surface-2);}

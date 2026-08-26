@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Control de Pagos</title>
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <h1>💳 Control de Pagos</h1>
+    <p class="tagline">Tu control simple de pagos, gastos y ahorro</p>
+    <p class="purpose">Registra lo que debes pagar cada mes, márcalo cuando lo pagues y separa dinero para tus metas. Todo se guarda solo en este navegador — no se envía a ningún servidor.</p>
+    <div class="sub" id="fechaHoyTexto"></div>
+  </header>
+
+  <!-- Navegación principal: 5 secciones (§1.2). Un único bloque de botones
+       en el HTML; el CSS lo reposiciona según el viewport (§1.3). -->
+  <nav class="tabs">
+    <button data-tab="inicio" class="active">🏠 Inicio</button>
+    <button data-tab="programados">📅 Programados</button>
+    <button data-tab="ahorro-deudas">🎯 Ahorro y deudas</button>
+    <button data-tab="categorias">🏷️ Categorías</button>
+    <button data-tab="ajustes">⚙️ Ajustes</button>
+  </nav>
+
+  <!-- INICIO -->
+  <section class="panel active" id="panel-inicio">
+    <div id="datosEjemploBanner"></div>
+    <div id="backupBanner"></div>
+
+    <!-- 2. Resumen del mes (§3): lo gastado en el día a día y lo que aún falta por pagar -->
+    <div class="stat-row" id="statRow"></div>
+
+    <!-- 3. Barra de porcentajes por categoría + toggle de alcance + leyenda (§2.4) -->
+    <div class="card">
+      <h2>Gasto por categoría</h2>
+      <div class="daily-bar-toggle" id="dailyBarToggle">
+        <button type="button" data-modo="diarios" data-action="cambiar-alcance-diario">Solo diarios</button>
+        <button type="button" data-modo="todo" data-action="cambiar-alcance-diario">Todo el mes</button>
+      </div>
+      <div class="daily-bar" id="dailyBar"></div>
+      <div class="daily-bar-legend" id="dailyBarLegend"></div>
+    </div>
+
+    <!-- 4. Grilla de registro rápido (§2.2) -->
+    <div class="card">
+      <h2>Registro rápido</h2>
+      <div class="daily-grid" id="dailyGrid"></div>
+    </div>
+
+    <!-- 5. Últimos registros (§2.5) -->
+    <div class="card">
+      <h2>Últimos registros</h2>
+      <div id="dailyLista"></div>
+    </div>
+
+    <!-- Separación visual evidente entre "lo que ya gasté" y "lo que tengo que pagar" (§3) -->
+    <div class="section-divider">Pagos programados</div>
+
+    <!-- 6. Semáforo de próximos pagos -->
+    <div id="reminderBanner"></div>
+    <div class="card">
+      <h2 class="semaforo-title">Próximos pagos programados</h2>
+      <p class="small muted" style="margin-top:-4px;">Rojo: vencido. Naranja: vence hoy o mañana. Amarillo: vence en 2-3 días. Verde: falta más tiempo.</p>
+      <div id="semaforoList"></div>
+    </div>
+
+    <!-- 7. Los tres gráficos: resumen, no acción -->
+    <div class="overview-graphics">
+      <div class="card graphic-card graphic-ahorro" data-action="ir-tab" data-tab="ahorro" role="button" tabindex="0">
+        <h3>🐷 Ahorro</h3>
+        <svg viewBox="0 0 160 130" aria-hidden="true">
+          <defs>
+            <clipPath id="pigBodyClip">
+              <ellipse cx="78" cy="72" rx="52" ry="33"/>
+            </clipPath>
+          </defs>
+          <ellipse cx="78" cy="72" rx="55" ry="36" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <rect class="fill-rect" id="ahorroFillRect" x="20" y="33" width="116" height="78" fill="var(--ahorro)" clip-path="url(#pigBodyClip)"/>
+          <ellipse cx="78" cy="72" rx="55" ry="36" fill="none" stroke="var(--border)" stroke-width="2"/>
+          <path d="M50,40 L62,20 L70,44 Z" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2" stroke-linejoin="round"/>
+          <ellipse cx="128" cy="74" rx="17" ry="13" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <circle cx="132" cy="71" r="2.2" fill="var(--muted)"/>
+          <circle cx="132" cy="78" r="2.2" fill="var(--muted)"/>
+          <circle cx="108" cy="60" r="3.5" fill="var(--text-primary)"/>
+          <rect x="52" y="97" width="15" height="24" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="100" y="97" width="15" height="24" rx="6" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <path d="M22,58 q-12,-6 -6,-18 q9,3 8,15" fill="none" stroke="var(--muted)" stroke-width="3.5" stroke-linecap="round"/>
+          <rect x="66" y="32" width="20" height="5" rx="2.5" fill="var(--muted)" transform="rotate(-6 76 34)"/>
+        </svg>
+        <div class="graphic-percent" id="ahorroGraphPercent">0%</div>
+        <div class="graphic-caption" id="ahorroGraphCaption">Cargando…</div>
+        <div class="graphic-more">Ver más →</div>
+      </div>
+      <div class="card graphic-card graphic-gasto" data-action="ir-tab" data-tab="gastos" role="button" tabindex="0">
+        <h3>🧾 Gastos de este mes</h3>
+        <svg viewBox="0 0 160 130" aria-hidden="true">
+          <defs>
+            <clipPath id="bagGastoClip">
+              <path d="M50,45 C50,25 110,25 110,45 C130,55 138,80 130,100 C122,118 38,118 30,100 C22,80 30,55 50,45 Z"/>
+            </clipPath>
+          </defs>
+          <path d="M50,45 C50,25 110,25 110,45 C130,55 138,80 130,100 C122,118 38,118 30,100 C22,80 30,55 50,45 Z" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <rect class="fill-rect" id="gastoFillRect" x="15" y="20" width="130" height="105" fill="var(--brand)" clip-path="url(#bagGastoClip)"/>
+          <path d="M50,45 C50,25 110,25 110,45 C130,55 138,80 130,100 C122,118 38,118 30,100 C22,80 30,55 50,45 Z" fill="none" stroke="var(--border)" stroke-width="2"/>
+          <path d="M62,20 Q80,8 98,20" fill="none" stroke="var(--muted)" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="80" cy="22" rx="14" ry="7" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <text x="80" y="90" text-anchor="middle" font-size="34" font-weight="800" fill="var(--text-primary)" opacity="0.18">$</text>
+        </svg>
+        <div class="graphic-percent" id="gastoGraphPercent">0%</div>
+        <div class="graphic-caption" id="gastoGraphCaption">Cargando…</div>
+        <div class="graphic-more">Ver más →</div>
+      </div>
+      <div class="card graphic-card graphic-deuda" data-action="ir-tab" data-tab="deudas" role="button" tabindex="0">
+        <h3>💳 Deudas</h3>
+        <svg viewBox="0 0 160 140" aria-hidden="true">
+          <defs>
+            <clipPath id="bagDeudaClip">
+              <path d="M50,40 C50,20 110,20 110,40 C130,50 138,75 130,95 C122,113 38,113 30,95 C22,75 30,50 50,40 Z"/>
+            </clipPath>
+          </defs>
+          <path d="M50,40 C50,20 110,20 110,40 C130,50 138,75 130,95 C122,113 38,113 30,95 C22,75 30,50 50,40 Z" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <rect class="fill-rect" id="deudaFillRect" x="15" y="15" width="130" height="100" fill="var(--deuda)" clip-path="url(#bagDeudaClip)"/>
+          <path d="M50,40 C50,20 110,20 110,40 C130,50 138,75 130,95 C122,113 38,113 30,95 C22,75 30,50 50,40 Z" fill="none" stroke="var(--border)" stroke-width="2"/>
+          <path d="M62,15 Q80,3 98,15" fill="none" stroke="var(--muted)" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="80" cy="17" rx="14" ry="7" fill="var(--surface-2)" stroke="var(--border)" stroke-width="2"/>
+          <line x1="80" y1="113" x2="80" y2="122" stroke="var(--muted)" stroke-width="3"/>
+          <circle cx="80" cy="128" r="7" fill="none" stroke="var(--muted)" stroke-width="3"/>
+          <circle cx="80" cy="138" r="7" fill="none" stroke="var(--muted)" stroke-width="3"/>
+        </svg>
+        <div class="graphic-percent" id="deudaGraphPercent">0%</div>
+        <div class="graphic-caption" id="deudaGraphCaption">Cargando…</div>
+        <div class="graphic-more">Ver más →</div>
+      </div>
+    </div>
+
+    <!-- 8. Indicador datos.gov.co: al final, menor jerarquía visual -->
+    <div class="card" id="indicadorCard">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+        <h2 style="margin:0;">Indicador de referencia (datos.gov.co)</h2>
+        <button class="btn secondary small" id="btnRefrescarIndicador">🔄 Actualizar</button>
+      </div>
+      <div id="indicadorContenido" style="margin-top:8px;"></div>
+      <p class="small muted" style="margin:8px 0 0;">Este valor es solo informativo y se consulta directamente al portal de datos abiertos del gobierno. No lo uses como única fuente para decisiones legales, fiscales o contractuales — verifica siempre con la fuente oficial.</p>
+    </div>
+  </section>
+
+  <!-- PROGRAMADOS: gastos fijos/variables + calendario (§1.2) -->
+  <section class="panel" id="panel-programados">
+    <div class="subtabs">
+      <button data-subtab="gastos" class="active">🧾 Gastos</button>
+      <button data-subtab="calendario">📅 Calendario</button>
+    </div>
+
+    <div class="subpanel active" id="subpanel-gastos">
+      <div class="card">
+        <h2 id="formTitulo">Agregar gasto</h2>
+        <form id="formGasto">
+          <input type="hidden" id="editId">
+          <input type="hidden" id="editTipoOriginal">
+          <div class="field">
+            <label for="fNombre">Nombre del gasto</label>
+            <input type="text" id="fNombre" placeholder="Ej: Arriendo, Nómina, Internet..." required>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="fMonto">Monto a pagar (COP)</label>
+              <input type="number" id="fMonto" min="0" step="1" placeholder="0" required>
+              <div class="hint" id="fMontoHint"></div>
+            </div>
+            <div class="field">
+              <label for="fCategoria">Categoría</label>
+              <select id="fCategoria" required></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>¿Este gasto se repite todos los meses?</label>
+            <div class="radio-group">
+              <label><input type="radio" name="fTipo" value="fijo" checked> 🔁 Sí, cada mes</label>
+              <label><input type="radio" name="fTipo" value="variable"> 1️⃣ No, es pago único</label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="fFecha">Fecha límite de pago</label>
+            <input type="date" id="fFecha" required>
+            <div class="hint" id="fFechaHint">Este gasto se repetirá cada mes en este mismo día.</div>
+          </div>
+          <details class="opciones" id="fMasOpciones">
+            <summary>Más opciones ▾</summary>
+            <div class="field" style="margin-top:6px;">
+              <label for="fTipoGasto">Etiqueta adicional (opcional)</label>
+              <select id="fTipoGasto">
+                <option value="">— Sin especificar —</option>
+                <option value="Gasto Fijo de Monto Variable">🧾 Gasto Fijo de Monto Variable</option>
+                <option value="Gasto Ocasional">🎲 Gasto Ocasional</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Ámbito</label>
+              <div class="radio-group">
+                <label><input type="radio" name="fAmbito" value="personal" checked> Personal</label>
+                <label><input type="radio" name="fAmbito" value="negocio"> Negocio</label>
+              </div>
+            </div>
+          </details>
+          <div class="form-actions">
+            <button type="submit" class="btn" id="btnGuardarGasto">Guardar gasto</button>
+            <button type="button" class="btn secondary hidden" id="btnCancelarEdicion">Cancelar edición</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <h2>Todos mis gastos</h2>
+        <input type="text" id="listBusqueda" placeholder="🔍 Buscar por nombre..." style="margin-bottom:10px;">
+        <details class="opciones" id="filtrosDetails">
+          <summary id="filtrosSummary">Filtros ▾</summary>
+          <div class="filters">
+            <select id="listFiltroTipo">
+              <option value="">Fijos y variables</option>
+              <option value="fijo">Solo fijos</option>
+              <option value="variable">Solo variables</option>
+            </select>
+            <select id="listFiltroCategoria"><option value="">Todas las categorías</option></select>
+            <select id="listFiltroTipoGasto">
+              <option value="">Todos los Tipos de Gasto</option>
+              <option value="Gasto Fijo de Monto Variable">🧾 Gasto Fijo de Monto Variable</option>
+              <option value="Gasto Ocasional">🎲 Gasto Ocasional</option>
+            </select>
+            <select id="listFiltroAmbito">
+              <option value="">Personal y Negocio</option>
+              <option value="personal">Solo Personal</option>
+              <option value="negocio">Solo Negocio</option>
+            </select>
+            <select id="listFiltroEstado">
+              <option value="">Pagados y pendientes</option>
+              <option value="pendiente">Solo pendientes</option>
+              <option value="pagado">Solo pagados</option>
+            </select>
+          </div>
+        </details>
+        <div id="listaGastos"></div>
+      </div>
+    </div>
+
+    <div class="subpanel" id="subpanel-calendario">
+      <div class="card">
+        <div class="view-toggle">
+          <button class="btn secondary" id="btnVistaMes" data-view="mes">Vista mensual</button>
+          <button class="btn secondary" id="btnVistaSemana" data-view="semana">Vista semanal</button>
+        </div>
+        <div class="cal-nav">
+          <div class="cal-nav-btns">
+            <button class="btn secondary small" id="btnCalPrev">‹ Anterior</button>
+            <button class="btn secondary small" id="btnCalHoy">Hoy</button>
+            <button class="btn secondary small" id="btnCalNext">Siguiente ›</button>
+          </div>
+          <div class="title" id="calTitle"></div>
+        </div>
+        <div id="calBody"></div>
+        <div class="filters" style="margin-top:12px;">
+          <select id="calFiltroCategoria"><option value="">Todas las categorías</option></select>
+          <select id="calFiltroAmbito">
+            <option value="">Personal y Negocio</option>
+            <option value="personal">Solo Personal</option>
+            <option value="negocio">Solo Negocio</option>
+          </select>
+        </div>
+        <p class="small muted" id="calLeyenda" style="margin:8px 0 0;">● Cada punto representa un pago programado ese día · El color es el de su categoría (🐷 verde = Ahorro, 💳 ámbar = Deuda) · Un punto más tenue ya está pagado.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- AHORRO Y DEUDAS (§1.2) -->
+  <section class="panel" id="panel-ahorro-deudas">
+    <div class="subtabs">
+      <button data-subtab="ahorro" class="active">🐷 Ahorro</button>
+      <button data-subtab="deudas">💳 Deudas</button>
+    </div>
+
+    <div class="subpanel active" id="subpanel-ahorro">
+      <div class="card">
+        <h2 id="formAhorroTitulo">🐷 Nueva meta de ahorro programado</h2>
+        <p class="small muted" style="margin-top:-4px;">Crea una meta y cada mes te recordará el aporte, igual que un gasto fijo — pero es dinero que separas para ti, no una factura.</p>
+        <form id="formAhorro">
+          <input type="hidden" id="editAhorroId">
+          <div class="field">
+            <label for="ahNombre">Nombre de la meta</label>
+            <input type="text" id="ahNombre" placeholder="Ej: Fondo de emergencia, Vacaciones, Nuevo equipo...">
+          </div>
+          <div class="field">
+            <label for="ahMetaTotal">Meta total a ahorrar (COP)</label>
+            <input type="number" id="ahMetaTotal" placeholder="0" inputmode="numeric">
+            <div class="hint">El monto total que quieres reunir. Con esto calculamos tu avance.</div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="ahMonto">Monto a ahorrar cada mes (COP)</label>
+              <input type="number" id="ahMonto" placeholder="0" inputmode="numeric">
+            </div>
+            <div class="field">
+              <label for="ahFecha">Fecha del próximo aporte</label>
+              <input type="date" id="ahFecha">
+              <div class="hint">Este aporte se repetirá cada mes en este mismo día.</div>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn" id="btnGuardarAhorro">💾 Guardar meta</button>
+            <button type="button" class="btn secondary hidden" id="btnCancelarEdicionAhorro">Cancelar edición</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>🐷 Mis metas de ahorro</h2>
+        <div id="listaAhorros"></div>
+      </div>
+    </div>
+
+    <div class="subpanel" id="subpanel-deudas">
+      <div class="card">
+        <h2 id="formDeudaTitulo">Nueva deuda</h2>
+        <p class="small muted" style="margin-top:-4px;">No calculamos intereses ni amortización: el extracto de tu banco es la fuente de verdad. Aquí solo registras el saldo y ves tu avance.</p>
+        <form id="formDeuda">
+          <input type="hidden" id="editDeudaId">
+          <div class="field">
+            <label for="dNombre">Nombre</label>
+            <input type="text" id="dNombre" placeholder="Ej: Tarjeta Bancolombia, Crédito vehículo..." required>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="dTipo">Tipo</label>
+              <select id="dTipo">
+                <option value="tarjeta">💳 Tarjeta de crédito</option>
+                <option value="credito">🏦 Crédito de libre inversión</option>
+                <option value="hipoteca">🏠 Hipoteca / vivienda</option>
+                <option value="vehiculo">🚗 Vehículo</option>
+                <option value="personal">🤝 Préstamo personal</option>
+                <option value="otro">📌 Otro</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="dSaldoActual">Saldo actual de la deuda (COP)</label>
+              <input type="number" id="dSaldoActual" min="0" step="1" placeholder="0" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label for="dCuotaMensual">Cuota mensual (COP)</label>
+              <input type="number" id="dCuotaMensual" min="0" step="1" placeholder="0" required>
+            </div>
+            <div class="field">
+              <label for="dFecha">Día de vencimiento de la cuota</label>
+              <input type="date" id="dFecha" required>
+              <div class="hint">Esta cuota se repetirá cada mes en este mismo día.</div>
+            </div>
+          </div>
+          <details class="opciones" id="dMasOpciones">
+            <summary>Más opciones ▾</summary>
+            <div class="field" style="margin-top:6px;">
+              <label>Ámbito</label>
+              <div class="radio-group">
+                <label><input type="radio" name="dAmbito" value="personal" checked> Personal</label>
+                <label><input type="radio" name="dAmbito" value="negocio"> Negocio</label>
+              </div>
+            </div>
+            <div class="field">
+              <label for="dTasaInfo">Tasa / condiciones (opcional)</label>
+              <input type="text" id="dTasaInfo" placeholder="Ej: 2.1% MV + seguro">
+              <div class="hint">Solo informativo, ej: 2.1% MV + seguro. La app no calcula intereses.</div>
+            </div>
+          </details>
+          <div class="form-actions">
+            <button type="submit" class="btn" id="btnGuardarDeuda">💾 Guardar deuda</button>
+            <button type="button" class="btn secondary hidden" id="btnCancelarEdicionDeuda">Cancelar edición</button>
+          </div>
+        </form>
+      </div>
+      <div class="card">
+        <h2>Mis deudas</h2>
+        <div id="listaDeudas"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CATEGORIAS -->
+  <section class="panel" id="panel-categorias">
+    <div class="card">
+      <h2>Nueva categoría</h2>
+      <form id="formCategoria">
+        <div class="form-row">
+          <div class="field" style="flex:2;">
+            <label for="catNombre">Nombre de la categoría</label>
+            <input type="text" id="catNombre" placeholder="Ej: Vivienda, Nómina, Impuestos..." required>
+          </div>
+          <div class="field" style="flex:0 0 80px;">
+            <label for="catColor">Color</label>
+            <input type="color" id="catColor">
+          </div>
+        </div>
+        <button type="submit" class="btn">Agregar categoría</button>
+      </form>
+    </div>
+    <div class="card">
+      <h2>Mis categorías</h2>
+      <div id="listaCategorias"></div>
+    </div>
+  </section>
+
+  <!-- AJUSTES -->
+  <section class="panel" id="panel-ajustes">
+    <div class="card">
+      <h2>Notificaciones</h2>
+      <p class="small muted">Recibe un aviso en tu navegador cuando falten 3 días o menos para el vencimiento de un pago. Solo funciona mientras esta página esté abierta en tu navegador.</p>
+      <button class="btn" id="btnActivarNotis">Activar notificaciones</button>
+      <p class="small" id="notiEstado" style="margin-top:8px;"></p>
+    </div>
+    <div class="card">
+      <h2>Copia de seguridad (JSON)</h2>
+      <p class="small muted">Copia completa de tus datos, ideal para pasar todo a otro computador o navegador. Tus datos se guardan solo en este navegador.</p>
+      <div class="form-actions">
+        <button class="btn secondary" id="btnExportar">Exportar copia (.json)</button>
+        <button class="btn secondary" id="btnImportarTrigger">Importar copia (.json)</button>
+        <input type="file" id="inputImportar" accept="application/json" style="display:none;">
+      </div>
+    </div>
+    <div class="card">
+      <h2>Exportar / Importar en Excel (CSV)</h2>
+      <p class="small muted">Descarga tus gastos y metas de ahorro en un archivo que abre bien en Excel en español, o carga un CSV con esas mismas columnas para agregar registros.</p>
+      <div class="form-actions">
+        <button class="btn secondary" id="btnExportarCsv">Exportar a Excel (.csv)</button>
+        <button class="btn secondary" id="btnImportarCsvTrigger">Importar desde Excel (.csv)</button>
+        <input type="file" id="inputImportarCsv" accept=".csv,text/csv" style="display:none;">
+      </div>
+      <p class="hint" style="margin-top:8px;">Columnas del CSV: Frecuencia, Nombre, Categoria, TipoDeGasto, Ambito, Monto, MetaTotal, FechaLimite, Estado. Frecuencia acepta Fijo, Variable, Ahorro, Deuda o Diario. Para Deuda: Monto es la cuota mensual y MetaTotal es el saldo actual. Para Diario: Nombre es la nota (opcional) y FechaLimite es la fecha del gasto.</p>
+    </div>
+    <div class="card">
+      <h2>Imprimir / Guardar como PDF</h2>
+      <p class="small muted">Genera una hoja limpia de una página con tus pagos del mes, tu nombre y la fecha. En la ventana de impresión elige "Guardar como PDF" si prefieres un archivo.</p>
+      <div class="field">
+        <label for="perfilNombre">Tu nombre (aparece en la hoja impresa)</label>
+        <input type="text" id="perfilNombre" placeholder="Ej: Juan Pérez">
+      </div>
+      <button class="btn secondary" id="btnImprimir">🖨️ Imprimir / Guardar PDF</button>
+    </div>
+    <div class="card">
+      <h2>Borrar datos</h2>
+      <p class="small muted">Elimina todos los gastos y categorías guardados en este navegador. Esta acción no se puede deshacer, y tampoco hay copia en ningún servidor: si no exportaste una copia (arriba) antes de borrar, esos datos se pierden para siempre. Lo mismo pasa si borras el caché/datos de navegación del navegador o usas modo incógnito: perderás todo sin aviso.</p>
+      <button class="btn danger" id="btnBorrarTodo">Borrar todos mis datos</button>
+    </div>
+  </section>
+
+  <div id="printArea"></div>
+
+  <footer class="app-footer">Tus datos se guardan solo en este navegador — no se envían a ningún servidor. Esta herramienta es de uso informativo/personal para organizar tus pagos; no reemplaza asesoría contable, financiera ni fiscal. Exporta una copia (.json o .csv) con frecuencia: si borras los datos del navegador, se pierden para siempre.</footer>
+</div>
+
+<div class="modal-overlay hidden" id="modalOverlay">
+  <div class="modal" id="modalContent"></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

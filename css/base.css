@@ -1,0 +1,69 @@
+:root{
+  color-scheme: dark;
+  --surface: #1c1e24;
+  --surface-2: #17181d;
+  --page: #131419;
+  --text-primary: #f3f4f6;
+  --text-secondary: #c2c5cc;
+  --muted: #8d9099;
+  --gridline: #2b2d34;
+  --border: rgba(255,255,255,0.12);
+  --brand: #2f68cc;
+  --brand-dark: #5089e0;
+  /* Acento propio de todo lo relacionado con Ahorro: sub-pestaña, panel,
+     botones y gráfico del chanchito. El resto de la app sigue en azul. */
+  --ahorro: #199e70;
+  --ahorro-dark: #157a55;
+  --ahorro-bg-1: #0f2a1e;
+  --ahorro-bg-2: #0a1d15;
+  --ahorro-border: rgba(25,158,112,0.32);
+  /* Acento propio de todo lo relacionado con Deudas: sub-pestaña, panel,
+     botones y gráfico del saco lastrado. Nunca calculamos intereses:
+     este color solo marca la sección, no implica ningún cálculo. */
+  --deuda: #c9821a;
+  --deuda-dark: #a3690f;
+  --deuda-bg-1: #2a1d0a;
+  --deuda-bg-2: #1c1307;
+  --deuda-border: rgba(201,130,26,0.32);
+  /* Colores del semáforo de vencimiento — su significado se explica en la
+     propia interfaz (Rojo/Naranja/Amarillo/Verde), así que se conservan
+     tal cual para no romper esa lectura ya aprendida. */
+  --good: #1fa855;
+  --warning: #e4a916;
+  --serious: #e2794f;
+  --critical: #e0514f;
+  --radius: 12px;
+  /* Alto de la barra de navegación inferior fija en móvil (§1.3). */
+  --nav-mobile-height: 60px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+.hidden{display:none !important;}
+body{
+  background:var(--page);
+  color:var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  /* En móvil hay que dejar espacio para la barra de navegación inferior
+     fija (§1.3); en escritorio se restaura el valor original (ver layout.css). */
+  padding-bottom: calc(var(--nav-mobile-height) + 16px);
+}
+#app{max-width:960px;margin:0 auto;padding:0 14px;}
+
+header.top{
+  padding:18px 4px 10px;
+  display:flex;flex-direction:column;gap:3px;
+}
+header.top h1{font-size:1.4rem;margin:0;}
+header.top .tagline{color:var(--text-secondary);font-size:0.95rem;font-weight:600;margin:2px 0 0;}
+header.top .purpose{color:var(--muted);font-size:0.85rem;margin:2px 0 0;max-width:56ch;}
+header.top .sub{color:var(--muted);font-size:0.8rem;margin-top:6px;}
+
+.muted{color:var(--muted);}
+.small{font-size:0.82rem;}
+
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes bump{0%{transform:scale(1);}50%{transform:scale(1.06);}100%{transform:scale(1);}}
+
+footer.app-footer{text-align:center;color:var(--muted);font-size:0.75rem;padding:20px 10px 6px;}

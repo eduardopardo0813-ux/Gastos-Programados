@@ -1,0 +1,342 @@
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.35);
+}
+.card h2{margin:0 0 10px;font-size:1.05rem;}
+.card h3{margin:0 0 8px;font-size:0.95rem;}
+.semaforo-title{
+  font-size:1.1rem;position:relative;padding-bottom:8px;margin-bottom:12px !important;
+}
+.semaforo-title::after{
+  content:'';position:absolute;left:0;bottom:0;width:36px;height:3px;
+  background:var(--brand);border-radius:2px;
+}
+#indicadorCard{background:var(--surface-2);}
+#indicadorCard h2{font-size:0.9rem;color:var(--text-secondary);font-weight:600;}
+
+.stat-tile{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 10px;text-align:center;
+}
+.stat-tile .num{font-size:1.35rem;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;}
+.stat-tile .num.bump{animation:bump .3s ease;}
+.stat-tile .label{font-size:0.72rem;color:var(--text-secondary);margin-top:3px;}
+
+.graphic-card{
+  text-align:center;cursor:pointer;
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.graphic-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,0.45);}
+.graphic-card:active{transform:translateY(-1px);}
+.graphic-card:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.graphic-card h3{margin:0 0 4px;font-size:0.88rem;}
+.graphic-card svg{width:100%;max-width:128px;height:auto;display:block;margin:0 auto;}
+.graphic-percent{font-size:1.35rem;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums;}
+.graphic-caption{font-size:0.74rem;color:var(--muted);margin-top:2px;min-height:2.3em;}
+.graphic-more{font-size:0.72rem;font-weight:700;margin-top:2px;}
+.graphic-ahorro .graphic-percent{color:var(--ahorro);}
+.graphic-ahorro .graphic-more{color:var(--ahorro);}
+.graphic-gasto .graphic-percent{color:var(--brand);}
+.graphic-gasto .graphic-more{color:var(--brand);}
+.graphic-deuda .graphic-percent{color:var(--deuda);}
+.graphic-deuda .graphic-more{color:var(--deuda);}
+.fill-rect{
+  transform-box:fill-box;transform-origin:bottom;
+  transform:scaleY(0);
+  transition:transform .9s cubic-bezier(.22,1,.36,1);
+}
+
+.banner{
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:14px;
+  background:rgba(250,178,25,0.10);
+  border:1px solid rgba(250,178,25,0.35);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+}
+.banner strong{display:block;font-size:0.95rem;margin-bottom:2px;}
+.banner p{margin:0;font-size:0.82rem;color:var(--text-secondary);}
+
+/* banner de datos de ejemplo */
+.banner-ejemplo{
+  border:2px dashed var(--brand);
+  border-radius:var(--radius);
+  padding:14px 16px;
+  margin-bottom:14px;
+  background:rgba(47,104,204,0.08);
+}
+.banner-ejemplo strong{display:block;font-size:0.92rem;margin-bottom:4px;}
+.banner-ejemplo p{margin:0 0 10px;font-size:0.85rem;color:var(--text-secondary);}
+
+/* banner de recordatorio de copia de seguridad */
+.banner-backup{
+  border-radius:var(--radius);
+  padding:12px 14px;
+  margin-bottom:14px;
+  background:rgba(255,255,255,0.04);
+  border:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.banner-backup p{margin:0;font-size:0.82rem;color:var(--text-secondary);}
+.banner-backup .btn-cerrar-backup{background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:2px 6px;}
+.banner-backup .btn-cerrar-backup:hover{color:var(--text-primary);}
+
+/* mini-guía de primeros pasos (estado totalmente vacío) */
+.mini-guia{display:flex;flex-wrap:wrap;gap:6px;align-items:center;justify-content:center;padding:16px 6px;text-align:center;}
+.mini-guia-step{
+  cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--brand);
+  padding:7px 12px;border-radius:8px;background:var(--surface-2);border:1px solid var(--border);
+}
+.mini-guia-step:hover{background:var(--gridline);}
+.mini-guia-step:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.mini-guia-arrow{color:var(--muted);}
+
+button{font-family:inherit;}
+.btn{
+  background:var(--brand);color:#fff;border:none;border-radius:8px;
+  padding:9px 14px;font-size:0.86rem;font-weight:600;cursor:pointer;
+}
+.btn:hover{background:var(--brand-dark);}
+.btn.secondary{background:var(--surface-2);color:var(--text-primary);border:1px solid var(--border);}
+.btn.secondary:hover{background:#232320;}
+.btn.secondary.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand);}
+.btn.danger{background:rgba(208,59,59,0.12);color:#e66767;border:1px solid rgba(208,59,59,0.55);}
+.btn.danger:hover{background:rgba(208,59,59,0.22);}
+.btn.small{padding:6px 10px;font-size:0.78rem;border-radius:7px;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+
+/* sub-pestañas de "Programados" y "Ahorro y deudas" (§1.4) */
+.subtabs button{
+  background:var(--surface);
+  border:1px solid var(--border);
+  color:var(--text-secondary);
+  padding:9px 14px;
+  border-radius:999px;
+  font-size:0.86rem;
+  font-weight:600;
+  cursor:pointer;
+}
+.subtabs button.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+.subtabs button[data-subtab="ahorro"]{border-color:var(--ahorro-border);color:var(--ahorro);}
+.subtabs button[data-subtab="ahorro"].active{background:var(--ahorro);border-color:var(--ahorro);color:#fff;}
+.subtabs button[data-subtab="deudas"]{border-color:var(--deuda-border);color:var(--deuda);}
+.subtabs button[data-subtab="deudas"].active{background:var(--deuda);border-color:var(--deuda);color:#fff;}
+
+/* occurrence row */
+.occ-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:10px 8px;border-radius:9px;border-left:4px solid var(--muted);
+  background:var(--page);margin-bottom:8px;
+}
+.occ-row.status-critical{border-left-color:var(--critical);}
+.occ-row.status-serious{border-left-color:var(--serious);}
+.occ-row.status-warning{border-left-color:var(--warning);}
+.occ-row.status-good{border-left-color:var(--good);}
+.occ-row.status-pagado{border-left-color:var(--gridline);opacity:0.75;}
+.occ-main{flex:1;min-width:0;}
+.occ-title{font-weight:600;font-size:0.92rem;}
+.occ-meta{font-size:0.78rem;color:var(--text-secondary);margin-top:2px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+.occ-status-label{font-size:0.78rem;font-weight:600;margin-top:3px;}
+.occ-status-label.status-critical{color:#e66767;}
+.occ-status-label.status-serious{color:var(--serious);}
+.occ-status-label.status-warning{color:var(--warning);}
+.occ-status-label.status-good{color:var(--good);}
+.occ-status-label.status-pagado{color:var(--muted);}
+.occ-amount{font-weight:700;font-size:0.92rem;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.estimado-tag{font-weight:500;font-size:0.72rem;color:var(--muted);white-space:normal;}
+.occ-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
+.occ-actions-row{display:flex;gap:6px;}
+
+.cat-chip{display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--text-secondary);}
+.cat-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto;}
+.ambito-badge{font-size:0.7rem;padding:1px 6px;border-radius:5px;background:var(--gridline);color:var(--text-secondary);}
+
+/* forms */
+form .field{margin-bottom:12px;}
+form label{display:block;font-size:0.85rem;font-weight:600;margin-bottom:4px;}
+form .hint{font-size:0.76rem;color:var(--muted);margin-top:3px;}
+input[type=text],input[type=number],input[type=date],select,input[type=color]{
+  width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
+  background:var(--surface-2);font-size:0.92rem;color:var(--text-primary);font-family:inherit;
+}
+input[type=color]{padding:3px;height:38px;width:60px;}
+
+/* <details> "Más opciones" / "Filtros" — usado en varios formularios */
+details.opciones{margin-top:2px;}
+details.opciones summary{
+  cursor:pointer;font-size:0.85rem;font-weight:600;color:var(--brand);
+  list-style:none;padding:6px 0;user-select:none;
+}
+details.opciones summary::-webkit-details-marker{display:none;}
+details.opciones summary::before{content:'';}
+details.opciones[open] summary{margin-bottom:4px;}
+
+/* categorías: fila con totales diarios/programados y presupuesto (§6 Fase D) */
+.cat-row{display:flex;align-items:flex-start;gap:10px;padding:10px 4px;border-bottom:1px solid var(--gridline);}
+.cat-row:last-child{border-bottom:none;}
+.cat-swatch{width:20px;height:20px;border-radius:6px;flex:0 0 auto;margin-top:2px;}
+.cat-info{flex:1;min-width:0;}
+.cat-info .name{font-weight:600;font-size:0.9rem;}
+.cat-meta{font-size:0.76rem;color:var(--muted);margin-top:2px;}
+.cat-presupuesto{font-size:0.76rem;color:var(--text-secondary);margin-top:2px;}
+.cat-presupuesto.muted{color:var(--muted);}
+.cat-row-actions{display:flex;gap:6px;flex:0 0 auto;}
+
+/* gastos diarios: barra de porcentajes por categoría + toggle + leyenda (§2.4) */
+.daily-bar-toggle{display:flex;gap:6px;margin-bottom:12px;}
+.daily-bar-toggle button{
+  flex:1;background:var(--surface-2);border:1px solid var(--border);color:var(--text-secondary);
+  padding:7px 10px;border-radius:999px;font-size:0.8rem;font-weight:600;cursor:pointer;font-family:inherit;
+}
+.daily-bar-toggle button.active{background:var(--brand);border-color:var(--brand);color:#fff;}
+
+.daily-bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--gridline);margin-bottom:10px;}
+.daily-bar-seg{height:100%;display:flex;cursor:pointer;transition:width .6s cubic-bezier(.22,1,.36,1);}
+.daily-bar-part{height:100%;transition:width .6s cubic-bezier(.22,1,.36,1);}
+/* Rayado diagonal sutil: distingue de un vistazo el gasto que viene de un
+   pago programado (ya pagado este mes) del que viene del registro diario,
+   dentro del mismo segmento de categoría. */
+.daily-bar-part.programado{
+  background-image:repeating-linear-gradient(45deg, rgba(0,0,0,0.3) 0 4px, transparent 4px 8px);
+}
+
+.daily-bar-legend{display:flex;flex-direction:column;gap:2px;}
+.daily-bar-legend-item{
+  display:flex;align-items:center;gap:8px;background:none;border:none;color:var(--text-primary);
+  padding:5px 4px;border-radius:6px;cursor:pointer;font-size:0.82rem;text-align:left;font-family:inherit;width:100%;
+}
+.daily-bar-legend-item:hover{background:var(--surface-2);}
+.daily-bar-legend-item.active{background:var(--surface-2);box-shadow:inset 0 0 0 1px var(--border);}
+.daily-bar-legend-item .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+.daily-bar-legend-item .label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.daily-bar-legend-item .monto{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.daily-bar-legend-item .pct{color:var(--muted);font-size:0.76rem;width:32px;text-align:right;font-variant-numeric:tabular-nums;}
+
+.daily-filtro-activo{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-size:0.8rem;color:var(--text-secondary);margin-bottom:8px;
+}
+.daily-filtro-activo button{background:none;border:none;color:var(--brand);cursor:pointer;font-weight:600;font-size:inherit;font-family:inherit;padding:0;}
+
+/* gastos diarios: tarjetas de la grilla de registro rápido (§2.2) */
+.daily-cat-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px;min-height:72px;text-align:left;cursor:pointer;
+  display:flex;flex-direction:column;justify-content:center;gap:6px;
+  color:var(--text-primary);font-family:inherit;
+}
+.daily-cat-card:hover{border-color:var(--brand);}
+.daily-cat-card:active{transform:translateY(1px);}
+.daily-cat-card:focus-visible{outline:2px solid var(--brand);outline-offset:2px;}
+.daily-cat-card .name{font-weight:600;font-size:0.84rem;display:flex;align-items:center;gap:6px;}
+.daily-cat-card .name .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto;}
+.daily-cat-card .total{font-size:1.05rem;font-weight:700;font-variant-numeric:tabular-nums;}
+.daily-cat-card.add-other{
+  border-style:dashed;color:var(--muted);align-items:center;justify-content:center;text-align:center;
+}
+
+/* presupuesto mensual por categoría, dentro de su tarjeta de la grilla (§2.6) */
+.daily-cat-budget{margin-top:2px;}
+.daily-cat-budget-track{background:var(--gridline);border-radius:999px;height:5px;overflow:hidden;}
+.daily-cat-budget-fill{height:100%;border-radius:999px;transition:width .5s ease, background-color .3s ease;}
+.daily-cat-budget-text{font-size:0.68rem;color:var(--muted);margin-top:3px;}
+
+/* gastos diarios: filas de "últimos registros" y de la vista completa del mes (§2.5) */
+.daily-row{
+  display:flex;align-items:center;gap:10px;
+  padding:10px 8px;border-radius:9px;background:var(--page);margin-bottom:8px;
+}
+.daily-row .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto;}
+.daily-row .info{flex:1;min-width:0;}
+.daily-row .info .titulo{font-weight:600;font-size:0.9rem;}
+.daily-row .info .fecha{font-size:0.76rem;color:var(--muted);margin-top:1px;}
+.daily-row .monto{font-weight:700;font-size:0.9rem;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.daily-row .acciones{display:flex;gap:6px;}
+
+/* gastos diarios: hoja de registro — el monto es el protagonista (§2.3) */
+.daily-monto-input{
+  font-size:2rem;font-weight:700;text-align:center;padding:14px 10px;
+  font-variant-numeric:tabular-nums;
+}
+.daily-fecha-toggle{
+  background:none;border:none;color:var(--brand);font-weight:600;font-size:0.85rem;
+  cursor:pointer;padding:4px 0;
+}
+
+/* modal */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.65);display:flex;align-items:flex-end;justify-content:center;
+  z-index:50;
+}
+.modal-overlay.hidden{display:none;}
+.modal{
+  background:var(--surface);border-radius:16px 16px 0 0;max-width:520px;width:100%;
+  max-height:82vh;overflow-y:auto;padding:18px;
+}
+@media (min-width:640px){
+  .modal-overlay{align-items:center;}
+  .modal{border-radius:16px;}
+}
+.modal-close{float:right;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--muted);}
+
+.empty-state{text-align:center;color:var(--muted);padding:26px 10px;font-size:0.88rem;line-height:1.6;}
+
+.toast{
+  position:fixed;bottom:16px;left:50%;transform:translateX(-50%);
+  background:var(--brand);color:#fff;padding:10px 18px;border-radius:999px;
+  font-size:0.85rem;z-index:100;opacity:0;pointer-events:none;transition:opacity .25s ease;
+  box-shadow:0 4px 18px rgba(0,0,0,0.5);
+}
+.toast.show{opacity:1;pointer-events:auto;}
+.toast .toast-accion{
+  margin-left:10px;background:none;border:none;color:#fff;font-weight:700;
+  text-decoration:underline;cursor:pointer;padding:0;font-size:inherit;font-family:inherit;
+}
+
+/* ahorro programado: extras de botón/badge */
+#formAhorro .btn{background:var(--ahorro);}
+#formAhorro .btn:hover{background:var(--ahorro-dark);}
+#formAhorro .btn.secondary{border-color:var(--ahorro-border);color:var(--ahorro);}
+.tipo-gasto-badge{font-size:0.7rem;padding:1px 6px;border-radius:5px;background:rgba(52,211,153,0.14);color:#4fe3a8;}
+.btn.btn-ahorro{background:var(--ahorro);}
+.btn.btn-ahorro:hover{background:var(--ahorro-dark);}
+.btn.secondary.btn-ahorro-secondary{border-color:var(--ahorro-border);color:var(--ahorro);}
+
+/* deudas: extras de botón/badge */
+#formDeuda .btn{background:var(--deuda);}
+#formDeuda .btn:hover{background:var(--deuda-dark);}
+#formDeuda .btn.secondary{border-color:var(--deuda-border);color:var(--deuda);}
+.btn.btn-deuda{background:var(--deuda);}
+.btn.btn-deuda:hover{background:var(--deuda-dark);}
+.btn.secondary.btn-deuda-secondary{border-color:var(--deuda-border);color:var(--deuda);}
+.deuda-progress-track{background:var(--gridline);border-radius:999px;height:8px;overflow:hidden;margin-top:8px;}
+.deuda-progress-fill{background:var(--deuda);height:100%;border-radius:999px;transition:width .5s ease;}
+.deuda-badge-saldada{font-size:0.7rem;padding:2px 8px;border-radius:5px;background:rgba(31,168,85,0.16);color:var(--good);font-weight:700;}
+
+/* print report */
+#printArea{display:none;}
+#printArea .p-header{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid #111;padding-bottom:10px;margin-bottom:14px;}
+#printArea h1{margin:0;font-size:20px;color:#111;}
+#printArea .p-meta{text-align:right;font-size:12px;color:#333;}
+#printArea .p-meta strong{display:block;font-size:13px;color:#111;}
+#printArea table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:10px;}
+#printArea th,#printArea td{border:1px solid #999;padding:5px 6px;text-align:left;color:#111;}
+#printArea th{background:#eee;font-weight:700;}
+#printArea .p-section-title{font-size:13px;font-weight:700;margin:14px 0 6px;color:#111;}
+#printArea .p-totals{font-size:12px;text-align:right;color:#111;font-weight:700;}
+#printArea .p-footer{margin-top:16px;font-size:10px;color:#555;text-align:center;}
+
+@media print{
+  body *{visibility:hidden;}
+  #printArea, #printArea *{visibility:visible;}
+  #printArea{
+    display:block;position:absolute;top:0;left:0;width:100%;
+    background:#fff;color:#111;padding:16px;
+  }
+  @page{size:auto;margin:14mm;}
+}
