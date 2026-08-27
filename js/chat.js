@@ -33,14 +33,20 @@ function obtenerCandidatosModelo(apiKey){
     if(!candidatos.length){
       throw new Error('tu clave no tiene ningún modelo disponible para generar texto.');
     }
-    // Se prefieren los modelos "flash" (rápidos y económicos) sin ser de
-    // visión/embeddings; el resto queda como respaldo si esos fallan.
+    // "generateContent" en supportedGenerationMethods no garantiza que el
+    // modelo pueda responder en TEXTO — hay variantes de texto-a-voz,
+    // generación de imagen, embeddings, etc. que también lo listan pero
+    // rechazan la combinación de modalidades que pedimos. Se descartan de
+    // entrada las familias conocidas que no sirven para esto.
+    var noTexto = /tts|embed|aqa|image-generation|imagen[0-9]?|-audio|native-audio|-live|realtime/i;
+    candidatos = candidatos.filter(function(m){ return !noTexto.test(m.name); });
+    if(!candidatos.length){
+      throw new Error('tu clave no tiene ningún modelo de texto disponible (solo modelos de voz/imagen/embeddings).');
+    }
+    // Se prefieren los modelos "flash" (rápidos y económicos); el resto
+    // (ej. "pro") queda como respaldo si esos fallan.
     candidatos.sort(function(a,b){
-      function puntaje(m){
-        if(/flash/i.test(m.name) && !/vision|embed/i.test(m.name)) return 0;
-        if(/flash/i.test(m.name)) return 1;
-        return 2;
-      }
+      function puntaje(m){ return /flash/i.test(m.name) ? 0 : 1; }
       return puntaje(a) - puntaje(b);
     });
     var nombres = candidatos.map(function(m){ return m.name; }); // ya vienen como "models/xxx"
@@ -77,17 +83,26 @@ function intentarConModelos(apiKey, contents, nombres, idx, ultimoError){
       // útil que solo mostrar el número de estado.
       return resp.json().catch(function(){ return null; }).then(function(errJson){
         var detalle = errJson && errJson.error && errJson.error.message;
-        if(resp.status === 400 || resp.status === 403){
-          var err = new Error('la clave de Gemini fue rechazada' + (detalle ? (': ' + detalle) : '. Revísala en Ajustes.'));
-          err.reintentable = false;
-          throw err;
+        // 403 siempre es la clave/los permisos, nunca el modelo — no tiene
+        // sentido probar otro modelo con la misma clave rechazada.
+        if(resp.status === 403){
+          var err403 = new Error('la clave de Gemini fue rechazada' + (detalle ? (': ' + detalle) : '. Revísala en Ajustes.'));
+          err403.reintentable = false;
+          throw err403;
         }
-        if(resp.status === 404){
-          var err404 = new Error('el modelo "' + modeloNombre + '" no aceptó la llamada' + (detalle ? (': ' + detalle) : '.'));
-          err404.reintentable = true;
-          throw err404;
+        // Un 400/404 puede ser un problema real de la clave (formato
+        // inválido) o, más seguido, un problema de ESTE modelo puntual (no
+        // soporta responder en texto, ya no existe, etc.) — se distingue por
+        // el texto del error: solo si menciona la clave/API key se da por
+        // no reintentable; cualquier otro 400/404 se prueba con el siguiente
+        // modelo de la lista antes de rendirse.
+        var esProblemaDeClave = /api[ _-]?key/i.test(detalle || '');
+        if((resp.status === 400 || resp.status === 404) && !esProblemaDeClave){
+          var errModelo = new Error('el modelo "' + modeloNombre + '" no aceptó la llamada' + (detalle ? (': ' + detalle) : '.'));
+          errModelo.reintentable = true;
+          throw errModelo;
         }
-        var errOtro = new Error('el servicio respondió con error ' + resp.status + (detalle ? (': ' + detalle) : ''));
+        var errOtro = new Error((esProblemaDeClave ? 'la clave de Gemini fue rechazada' : 'el servicio respondió con error ' + resp.status) + (detalle ? (': ' + detalle) : ''));
         errOtro.reintentable = false;
         throw errOtro;
       });
