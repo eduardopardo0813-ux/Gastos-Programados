@@ -39,6 +39,9 @@ import {
   abrirHojaGastoDiario, eliminarDailyConRespaldo, restaurarDailyEliminado,
   abrirVistaCompletaMesDiario
 } from './daily.js';
+import {
+  getGeminiApiKey, guardarGeminiApiKey, quitarGeminiApiKey, probarGeminiApiKey
+} from './ai.js';
 
 var INDICADOR_URL = 'https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC';
 
@@ -388,6 +391,15 @@ export function updateNotiEstado(){
   }
 }
 
+// ---------- IA (Gemini) ----------
+export function actualizarEstadoGeminiUI(){
+  var el = document.getElementById('geminiKeyEstado');
+  if(!el) return;
+  el.textContent = getGeminiApiKey()
+    ? '🔑 Tienes una clave guardada en este navegador.'
+    : 'Aún no has guardado una clave.';
+}
+
 export function checkReminders(){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
   var today = startOfDay(new Date());
@@ -587,6 +599,38 @@ function wireEvents(){
   document.getElementById('btnBorrarTodo').addEventListener('click', borrarTodo);
   document.getElementById('btnRefrescarIndicador').addEventListener('click', actualizarIndicador);
 
+  document.getElementById('btnVerGeminiKey').addEventListener('click', function(){
+    var input = document.getElementById('geminiApiKeyInput');
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
+  document.getElementById('btnGuardarGeminiKey').addEventListener('click', function(){
+    var input = document.getElementById('geminiApiKeyInput');
+    if(guardarGeminiApiKey(input.value)){
+      showToast('Clave guardada en este navegador.');
+      actualizarEstadoGeminiUI();
+    }
+  });
+  document.getElementById('btnQuitarGeminiKey').addEventListener('click', function(){
+    if(!getGeminiApiKey()){ showToast('No hay ninguna clave guardada.'); return; }
+    if(!confirm('¿Quitar la clave de Gemini guardada en este navegador?')) return;
+    quitarGeminiApiKey();
+    document.getElementById('geminiApiKeyInput').value = '';
+    actualizarEstadoGeminiUI();
+    showToast('Clave eliminada.');
+  });
+  document.getElementById('btnProbarGeminiKey').addEventListener('click', function(){
+    var input = document.getElementById('geminiApiKeyInput');
+    var key = input.value.trim() || getGeminiApiKey();
+    if(!key){ alert('Ingresa una clave antes de probarla.'); return; }
+    var estadoEl = document.getElementById('geminiKeyEstado');
+    estadoEl.textContent = '⏳ Probando conexión con Gemini...';
+    probarGeminiApiKey(key).then(function(res){
+      estadoEl.textContent = '✅ Conexión exitosa (' + res.modelos + ' modelos disponibles para esta clave).';
+    }).catch(function(err){
+      estadoEl.textContent = '❌ No se pudo conectar: ' + err.message;
+    });
+  });
+
   document.getElementById('modalOverlay').addEventListener('click', function(e){
     if(e.target.id === 'modalOverlay') closeModal();
   });
@@ -767,6 +811,8 @@ function init(){
     document.getElementById('informeMes').value = hoyInforme.getFullYear() + '-' + String(hoyInforme.getMonth()+1).padStart(2,'0');
     updateFechaHint();
     updateNotiEstado();
+    document.getElementById('geminiApiKeyInput').value = getGeminiApiKey();
+    actualizarEstadoGeminiUI();
     renderAll();
     renderIndicadorUI();
     actualizarIndicador();

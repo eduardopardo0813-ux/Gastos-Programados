@@ -32,6 +32,7 @@ Todos los datos se guardan solo en `localStorage` del navegador — no hay backe
 │   ├── calendar.js         # vistas mensual y semanal
 │   ├── categories.js       # categorías y presupuestos
 │   ├── backup.js           # exportar/importar JSON y CSV, impresión
+│   ├── ai.js               # conexión con Gemini: clave de API, prueba de conexión
 │   └── app.js               # init, navegación, orquestación de renders
 └── README.md
 ```
@@ -78,3 +79,16 @@ una tabla aparte "Gastos diarios de este mes" con su propio total, sin
 mezclarse con los totales de pagos programados.
 
 Con esto quedan implementadas las 4 fases de `arquitectura-v2-control-de-pagos.md`.
+
+## IA con Gemini (clave por usuario)
+
+Al final de Ajustes hay una tarjeta para conectar una clave de API de Google
+Gemini (gratis en [aistudio.google.com/apikey](https://aistudio.google.com/apikey)).
+Cada persona que abra la app pega **su propia clave** — nunca la del
+desarrollador — y queda guardada solo en el `localStorage` de su navegador,
+en una llave separada del resto de los datos (`js/ai.js`, no `js/store.js`),
+a propósito para que **nunca quede incluida en las copias de seguridad
+JSON/CSV** que alguien exporte o comparta. "Probar conexión" hace una
+llamada real y gratuita (lista de modelos, no genera contenido) para
+confirmar que la clave funciona. Las funciones de IA en sí (qué hace la app
+con Gemini) todavía están por definirse — esto es solo la conexión base.

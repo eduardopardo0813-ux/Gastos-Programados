@@ -457,6 +457,24 @@
       <p class="small muted">Elimina todos los gastos y categorías guardados en este navegador. Esta acción no se puede deshacer, y tampoco hay copia en ningún servidor: si no exportaste una copia (arriba) antes de borrar, esos datos se pierden para siempre. Lo mismo pasa si borras el caché/datos de navegación del navegador o usas modo incógnito: perderás todo sin aviso.</p>
       <button class="btn danger" id="btnBorrarTodo">Borrar todos mis datos</button>
     </div>
+    <div class="card">
+      <h2>🤖 Inteligencia artificial (Gemini)</h2>
+      <p class="small muted">Conecta tu propia clave de API de Google Gemini para las funciones de IA de la app. Tu clave se guarda solo en este navegador: nunca se incluye en las copias de seguridad (.json/.csv), nunca se envía a ningún servidor propio, y nunca viaja a otra parte que no sea la API de Google al usarla. Si compartes esta app con alguien más, cada persona debe ingresar la suya — nadie usa la tuya.</p>
+      <div class="field">
+        <label for="geminiApiKeyInput">Clave de API de Gemini</label>
+        <div class="gemini-key-row">
+          <input type="password" id="geminiApiKeyInput" placeholder="Pega aquí tu clave" autocomplete="off" spellcheck="false">
+          <button type="button" class="btn secondary small" id="btnVerGeminiKey" title="Mostrar/ocultar">👁</button>
+        </div>
+        <div class="hint">Consíguela gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a>. Nunca la compartas ni la pegues en otro sitio.</div>
+      </div>
+      <div class="form-actions">
+        <button class="btn secondary" id="btnGuardarGeminiKey">Guardar clave</button>
+        <button class="btn secondary" id="btnProbarGeminiKey">Probar conexión</button>
+        <button class="btn danger" id="btnQuitarGeminiKey">Quitar clave</button>
+      </div>
+      <p class="small" id="geminiKeyEstado" style="margin-top:8px;"></p>
+    </div>
   </section>
 
   <div id="printArea"></div>

@@ -159,12 +159,18 @@ button{font-family:inherit;}
 /* forms */
 form .field{margin-bottom:12px;}
 form label{display:block;font-size:0.85rem;font-weight:600;margin-bottom:4px;}
-form .hint{font-size:0.76rem;color:var(--muted);margin-top:3px;}
+form .hint,.hint{font-size:0.76rem;color:var(--muted);margin-top:3px;}
+.hint a{color:var(--brand-dark);}
 input[type=text],input[type=number],input[type=date],input[type=month],select,input[type=color]{
   width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
   background:var(--surface-2);font-size:0.92rem;color:var(--text-primary);font-family:inherit;
 }
 input[type=color]{padding:3px;height:38px;width:60px;}
+
+/* clave de API de Gemini: input + botón de mostrar/ocultar en la misma fila */
+.gemini-key-row{display:flex;gap:8px;align-items:center;}
+.gemini-key-row input{flex:1;}
+.gemini-key-row button{flex:0 0 auto;}
 
 /* <details> "Más opciones" / "Filtros" — usado en varios formularios */
 details.opciones{margin-top:2px;}
