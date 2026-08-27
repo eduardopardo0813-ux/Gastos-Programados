@@ -15,13 +15,17 @@ import { renderAll } from './app.js';
 
 // Qué modelo exacto expone "gemini-2.0-flash" (o cualquier otro) varía según
 // la cuenta y la región de cada clave — nunca es seguro suponer un nombre
-// fijo. En vez de adivinar, se le pregunta a Google la lista de modelos
-// disponibles para ESA clave y se elige uno que sirva para generar texto,
-// cacheado en memoria mientras no cambie la clave guardada.
-var modeloCache = null; // {apiKey, nombre}
+// fijo, ni siquiera confiar en que el primero de la lista funcione para
+// generateContent (Google a veces lista modelos que igual rechazan la
+// llamada). Por eso: se arma una lista de candidatos ordenada por
+// preferencia, y si uno falla con 404 se prueba el siguiente automáticamente.
+var modelosCandidatosCache = null; // {apiKey, nombres:[...]}
+var ultimoModeloQueFunciono = null; // nombre, para probarlo primero la próxima vez
 
-function elegirModeloParaChat(apiKey){
-  if(modeloCache && modeloCache.apiKey === apiKey) return Promise.resolve(modeloCache.nombre);
+function obtenerCandidatosModelo(apiKey){
+  if(modelosCandidatosCache && modelosCandidatosCache.apiKey === apiKey){
+    return Promise.resolve(modelosCandidatosCache.nombres);
+  }
   return listarModelosGemini(apiKey).then(function(modelos){
     var candidatos = modelos.filter(function(m){
       return Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.indexOf('generateContent') !== -1;
@@ -29,14 +33,92 @@ function elegirModeloParaChat(apiKey){
     if(!candidatos.length){
       throw new Error('tu clave no tiene ningún modelo disponible para generar texto.');
     }
-    // Se prefiere un modelo "flash" (rápido y económico) que no sea de
-    // visión/embeddings; si no hay ninguno así, se usa el primero que sirva.
-    var elegido = candidatos.find(function(m){ return /flash/i.test(m.name) && !/vision|embed/i.test(m.name); })
-      || candidatos.find(function(m){ return /flash/i.test(m.name); })
-      || candidatos[0];
-    modeloCache = {apiKey: apiKey, nombre: elegido.name}; // ya viene como "models/xxx"
-    return modeloCache.nombre;
+    // Se prefieren los modelos "flash" (rápidos y económicos) sin ser de
+    // visión/embeddings; el resto queda como respaldo si esos fallan.
+    candidatos.sort(function(a,b){
+      function puntaje(m){
+        if(/flash/i.test(m.name) && !/vision|embed/i.test(m.name)) return 0;
+        if(/flash/i.test(m.name)) return 1;
+        return 2;
+      }
+      return puntaje(a) - puntaje(b);
+    });
+    var nombres = candidatos.map(function(m){ return m.name; }); // ya vienen como "models/xxx"
+    modelosCandidatosCache = {apiKey: apiKey, nombres: nombres};
+    return nombres;
   });
+}
+
+// Intenta generar contenido con un modelo; si Google responde 404 para ese
+// modelo puntual, prueba con el siguiente candidato de la lista en vez de
+// rendirse. Cualquier otro tipo de error (clave rechazada, bloqueo de
+// seguridad, etc.) no es reintentable y se reporta tal cual.
+function intentarConModelos(apiKey, contents, nombres, idx, ultimoError){
+  if(idx >= nombres.length){
+    return Promise.reject(ultimoError || new Error('no se encontró ningún modelo de Gemini que funcione con tu clave.'));
+  }
+  var modeloNombre = nombres[idx];
+  var url = 'https://generativelanguage.googleapis.com/v1beta/' + modeloNombre + ':generateContent?key=' + encodeURIComponent(apiKey);
+  var body = {
+    systemInstruction: {parts: [{text: construirSystemInstruction()}]},
+    contents: contents,
+    generationConfig: {responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA}
+  };
+  var controller = ('AbortController' in window) ? new AbortController() : null;
+  var timeoutId = controller ? setTimeout(function(){ controller.abort(); }, 30000) : null;
+  var opts = {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)};
+  if(controller) opts.signal = controller.signal;
+
+  return fetch(url, opts)
+    .then(function(resp){
+      if(resp.ok) return resp.json();
+      // Se intenta leer el cuerpo del error: Google normalmente explica ahí
+      // la razón exacta (ej. "modelo no soporta generateContent"), mucho más
+      // útil que solo mostrar el número de estado.
+      return resp.json().catch(function(){ return null; }).then(function(errJson){
+        var detalle = errJson && errJson.error && errJson.error.message;
+        if(resp.status === 400 || resp.status === 403){
+          var err = new Error('la clave de Gemini fue rechazada' + (detalle ? (': ' + detalle) : '. Revísala en Ajustes.'));
+          err.reintentable = false;
+          throw err;
+        }
+        if(resp.status === 404){
+          var err404 = new Error('el modelo "' + modeloNombre + '" no aceptó la llamada' + (detalle ? (': ' + detalle) : '.'));
+          err404.reintentable = true;
+          throw err404;
+        }
+        var errOtro = new Error('el servicio respondió con error ' + resp.status + (detalle ? (': ' + detalle) : ''));
+        errOtro.reintentable = false;
+        throw errOtro;
+      });
+    })
+    .then(function(json){
+      var candidato = json.candidates && json.candidates[0];
+      var texto = candidato && candidato.content && candidato.content.parts && candidato.content.parts[0] && candidato.content.parts[0].text;
+      if(!texto){
+        if(candidato && candidato.finishReason === 'SAFETY'){
+          throw new Error('la respuesta fue bloqueada por los filtros de seguridad de Google.');
+        }
+        throw new Error('el modelo no devolvió una respuesta.');
+      }
+      var parsed;
+      try{ parsed = JSON.parse(texto); }catch(err){ throw new Error('el modelo devolvió una respuesta con formato inesperado.'); }
+      ultimoModeloQueFunciono = modeloNombre;
+      return parsed;
+    })
+    .catch(function(err){
+      if(timeoutId) clearTimeout(timeoutId);
+      if(err && err.name === 'AbortError'){
+        return Promise.reject(new Error('tiempo de espera agotado. Intenta de nuevo.'));
+      }
+      if(err && err.reintentable){
+        return intentarConModelos(apiKey, contents, nombres, idx + 1, err);
+      }
+      return Promise.reject(err);
+    })
+    .finally(function(){
+      if(timeoutId) clearTimeout(timeoutId);
+    });
 }
 
 var RESPONSE_SCHEMA = {
@@ -120,54 +202,14 @@ function construirContentsDesdeHistorial(){
 }
 
 function llamarGemini(apiKey, contents){
-  return elegirModeloParaChat(apiKey).then(function(modeloNombre){
-    var url = 'https://generativelanguage.googleapis.com/v1beta/' + modeloNombre + ':generateContent?key=' + encodeURIComponent(apiKey);
-    var body = {
-      systemInstruction: {parts: [{text: construirSystemInstruction()}]},
-      contents: contents,
-      generationConfig: {responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA}
-    };
-    var controller = ('AbortController' in window) ? new AbortController() : null;
-    var timeoutId = controller ? setTimeout(function(){ controller.abort(); }, 30000) : null;
-    var opts = {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)};
-    if(controller) opts.signal = controller.signal;
-    return fetch(url, opts)
-      .then(function(resp){
-        if(resp.status === 400 || resp.status === 403){
-          throw new Error('la clave de Gemini fue rechazada. Revísala en Ajustes.');
-        }
-        if(resp.status === 404){
-          // El modelo cacheado dejó de existir (ej. Google lo retiró a
-          // mitad de sesión) — se descarta el caché para que el próximo
-          // intento vuelva a preguntar la lista vigente.
-          modeloCache = null;
-          throw new Error('el modelo de IA ya no está disponible. Intenta de nuevo.');
-        }
-        if(!resp.ok){
-          throw new Error('el servicio respondió con error ' + resp.status);
-        }
-        return resp.json();
-      })
-      .then(function(json){
-        var candidato = json.candidates && json.candidates[0];
-        var texto = candidato && candidato.content && candidato.content.parts && candidato.content.parts[0] && candidato.content.parts[0].text;
-        if(!texto){
-          if(candidato && candidato.finishReason === 'SAFETY'){
-            throw new Error('la respuesta fue bloqueada por los filtros de seguridad de Google.');
-          }
-          throw new Error('el modelo no devolvió una respuesta.');
-        }
-        var parsed;
-        try{ parsed = JSON.parse(texto); }catch(err){ throw new Error('el modelo devolvió una respuesta con formato inesperado.'); }
-        return parsed;
-      })
-      .catch(function(err){
-        if(err && err.name === 'AbortError') throw new Error('tiempo de espera agotado. Intenta de nuevo.');
-        throw err;
-      })
-      .finally(function(){
-        if(timeoutId) clearTimeout(timeoutId);
-      });
+  return obtenerCandidatosModelo(apiKey).then(function(nombres){
+    // El último modelo que funcionó se prueba primero — evita repetir la
+    // ronda completa de candidatos en cada mensaje una vez se encontró uno bueno.
+    var ordenados = nombres;
+    if(ultimoModeloQueFunciono && nombres.indexOf(ultimoModeloQueFunciono) !== -1){
+      ordenados = [ultimoModeloQueFunciono].concat(nombres.filter(function(n){ return n !== ultimoModeloQueFunciono; }));
+    }
+    return intentarConModelos(apiKey, contents, ordenados, 0, null);
   });
 }
 
