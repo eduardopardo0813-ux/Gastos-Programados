@@ -389,8 +389,9 @@
   <!-- CATEGORIAS -->
   <section class="panel" id="panel-categorias">
     <div class="card">
-      <h2>Nueva categoría</h2>
+      <h2 id="catFormTitulo">Nueva categoría</h2>
       <form id="formCategoria">
+        <input type="hidden" id="editCatId">
         <div class="form-row">
           <div class="field" style="flex:2;">
             <label for="catNombre">Nombre de la categoría</label>
@@ -401,7 +402,10 @@
             <input type="color" id="catColor">
           </div>
         </div>
-        <button type="submit" class="btn">Agregar categoría</button>
+        <div class="form-actions">
+          <button type="submit" class="btn" id="btnGuardarCategoria">Agregar categoría</button>
+          <button type="button" class="btn secondary hidden" id="btnCancelarEdicionCategoria">Cancelar edición</button>
+        </div>
       </form>
     </div>
     <div class="card">

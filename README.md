@@ -55,11 +55,19 @@ móvil / modal centrado en escritorio), y un enlace a la vista completa del
 mes con búsqueda y filtros. Debajo, separados visualmente, los pagos
 programados (semáforo) y los tres gráficos resumen.
 
-En modo "Todo el mes", los segmentos que incluyen pagos programados ya
-pagados este mes llevan un rayado diagonal para distinguirlos del gasto
-diario dentro de la misma categoría. Las cuotas de deuda y aportes de
-ahorro (que no tienen categoría propia) se agrupan como "💳 Deuda" y
-"🐷 Ahorro" con sus colores ya usados en el resto de la app.
+En modo "Todo el mes" (por defecto), los segmentos que incluyen pagos
+programados ya pagados este mes llevan un rayado diagonal para
+distinguirlos del gasto diario dentro de la misma categoría. Las cuotas de
+deuda y aportes de ahorro (que no tienen categoría propia) se agrupan como
+"💳 Deuda" y "🐷 Ahorro" con sus colores ya usados en el resto de la app.
+"Gastado este mes" usa siempre el mismo cálculo que la barra de abajo (según
+el modo elegido), para que las dos cifras nunca se contradigan.
+
+## Editar categorías (v2)
+
+En Categorías, el botón ✎ de cada fila abre el mismo formulario de arriba en
+modo edición (nombre y color), igual que ya funciona para editar un gasto,
+una meta de ahorro o una deuda.
 
 ## Presupuestos por categoría (v2)
 

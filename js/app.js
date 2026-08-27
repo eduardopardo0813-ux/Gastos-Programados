@@ -27,7 +27,8 @@ import {
 } from './debts.js';
 import {
   populateCategoriaFilters, populateCategoriaSelect, nextCategoryColor, renderCategorias,
-  handleFormCategoriaSubmit, eliminarCategoria, reasignarYEliminarCategoria, getCategoria,
+  handleFormCategoriaSubmit, resetFormCategoria, fillCategoriaFormForEdit,
+  eliminarCategoria, reasignarYEliminarCategoria, getCategoria,
   abrirModalPresupuestoCategoria, guardarPresupuestoCategoria
 } from './categories.js';
 import { renderCalendario, openDiaModal } from './calendar.js';
@@ -35,7 +36,7 @@ import {
   exportarDatos, importarDatos, exportarCsv, importarCsv, imprimirReporte
 } from './backup.js';
 import {
-  renderDaily, renderUltimosRegistros, totalDiarioMes,
+  renderDaily, renderUltimosRegistros,
   abrirHojaGastoDiario, eliminarDailyConRespaldo, restaurarDailyEliminado,
   abrirVistaCompletaMesDiario
 } from './daily.js';
@@ -97,13 +98,18 @@ export function renderResumen(){
   var totalPendienteMes = pendientes.filter(function(o){
     return o.fecha.getMonth()===today.getMonth() && o.fecha.getFullYear()===today.getFullYear();
   }).reduce(function(sum,o){ return sum+o.monto; },0);
-  var totalGastadoDiarioMes = totalDiarioMes(today);
+  // "Gastado este mes" sigue el mismo alcance que la barra de categorías de
+  // abajo (§2.4): en "Todo el mes" suma también los pagos programados ya
+  // pagados este mes, no solo lo diario — así esta cifra y el total de la
+  // barra nunca se contradicen entre sí.
+  var modoAlcance = (data.prefBarraAlcance === 'todo') ? 'todo' : 'diarios';
+  var totalGastadoMes = totalGastoDelMes(modoAlcance, today);
 
-  // Resumen del mes (§3): dos cifras grandes — lo que ya se gastó en el día
-  // a día, y lo que todavía falta por pagar de lo programado. (La tercera
-  // cifra opcional, "Disponible", solo aplicaría si existiera un presupuesto
-  // global — este modelo de datos no lo tiene, así que se omite.)
-  var statValues = [currency.format(totalGastadoDiarioMes), currency.format(totalPendienteMes)];
+  // Resumen del mes (§3): dos cifras grandes — lo que ya se gastó, y lo que
+  // todavía falta por pagar de lo programado. (La tercera cifra opcional,
+  // "Disponible", solo aplicaría si existiera un presupuesto global — este
+  // modelo de datos no lo tiene, así que se omite.)
+  var statValues = [currency.format(totalGastadoMes), currency.format(totalPendienteMes)];
   var prevStats = state.prevStatValues;
   document.getElementById('statRow').innerHTML =
     statTile(statValues[0], 'Gastado este mes', !!prevStats && statValues[0] !== prevStats[0]) +
@@ -176,6 +182,15 @@ function computeBarraGrupos(modo, today){
   }
 
   return Object.keys(grupos).map(function(k){ return grupos[k]; });
+}
+
+// Misma fuente de datos que la barra (computeBarraGrupos), para que la
+// cifra "Gastado este mes" de arriba y el total de la barra de abajo nunca
+// se contradigan entre sí — ambos sumas del mismo cálculo, no dos números
+// separados que puedan desincronizarse.
+function totalGastoDelMes(modo, today){
+  var grupos = computeBarraGrupos(modo, today);
+  return grupos.reduce(function(s,g){ return s + (modo==='todo' ? g.diario+g.programado : g.diario); }, 0);
 }
 
 export function renderBarraCategorias(){
@@ -545,6 +560,7 @@ function wireEvents(){
   document.getElementById('btnCancelarEdicionDeuda').addEventListener('click', resetFormDeuda);
 
   document.getElementById('formCategoria').addEventListener('submit', handleFormCategoriaSubmit);
+  document.getElementById('btnCancelarEdicionCategoria').addEventListener('click', resetFormCategoria);
 
   document.getElementById('btnVistaMes').addEventListener('click', function(){ state.calView='mes'; renderCalendario(); });
   document.getElementById('btnVistaSemana').addEventListener('click', function(){ state.calView='semana'; renderCalendario(); });
@@ -715,6 +731,8 @@ function wireEvents(){
       closeModal();
     } else if(action === 'eliminar-categoria'){
       eliminarCategoria(el.dataset.id);
+    } else if(action === 'editar-categoria'){
+      fillCategoriaFormForEdit(el.dataset.id);
     } else if(action === 'editar-presupuesto-categoria'){
       abrirModalPresupuestoCategoria(el.dataset.id);
     } else if(action === 'confirmar-presupuesto-categoria'){
@@ -747,7 +765,10 @@ function wireEvents(){
       state.dailyFiltroCategorias = null;
       state.dailyFiltroLabel = null;
       saveData();
-      renderBarraCategorias();
+      // renderResumen() (no solo renderBarraCategorias) para que "Gastado
+      // este mes" cambie junto con la barra al cambiar de alcance — mismo
+      // número, misma fuente, nunca deben quedar desincronizados.
+      renderResumen();
       renderUltimosRegistros();
     } else if(action === 'filtrar-diario-categoria'){
       var clavesFiltro = el.dataset.catid.split(',');

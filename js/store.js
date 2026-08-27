@@ -76,8 +76,11 @@ export function migrateData(){
   if(typeof data.ultimaExportacion === 'undefined') data.ultimaExportacion = null;
   // Preferencia del toggle "Solo diarios / Todo el mes" de la barra de
   // categorías (§2.4): se guarda en los datos para que se recuerde entre
-  // sesiones, a diferencia del filtro de categoría (ese sí vive solo en `state`).
-  if(data.prefBarraAlcance !== 'diarios' && data.prefBarraAlcance !== 'todo') data.prefBarraAlcance = 'diarios';
+  // sesiones, a diferencia del filtro de categoría (ese sí vive solo en
+  // `state`). Por defecto "todo": un gasto programado ya pagado es un gasto
+  // real de este mes, así que cuenta desde el primer momento sin que haya
+  // que ir a buscar el toggle para verlo reflejado.
+  if(data.prefBarraAlcance !== 'diarios' && data.prefBarraAlcance !== 'todo') data.prefBarraAlcance = 'todo';
   // Categorías existentes (creadas antes de los gastos diarios) reciben los
   // campos nuevos: visibles en el registro rápido por defecto, sin presupuesto.
   data.categories.forEach(function(c){

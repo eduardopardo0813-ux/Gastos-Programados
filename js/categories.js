@@ -83,6 +83,7 @@ export function renderCategorias(){
               presupuestoHtml +
             '</div>' +
             '<div class="cat-row-actions">' +
+              '<button class="btn secondary small" data-action="editar-categoria" data-id="'+c.id+'" title="Editar nombre y color">✎</button>' +
               '<button class="btn secondary small" data-action="editar-presupuesto-categoria" data-id="'+c.id+'" title="Presupuesto mensual">💰</button>' +
               '<button class="btn secondary small" data-action="eliminar-categoria" data-id="'+c.id+'" title="Eliminar">🗑</button>' +
             '</div>' +
@@ -134,16 +135,46 @@ export function guardarPresupuestoCategoria(catId, valorStr){
 
 export function handleFormCategoriaSubmit(e){
   e.preventDefault();
+  var editId = document.getElementById('editCatId').value;
   var nombre = document.getElementById('catNombre').value.trim();
   var color = document.getElementById('catColor').value || nextCategoryColor();
-  if(!nombre){ alert('Falta el nombre de la categoría. Escríbelo arriba y vuelve a dar clic en Agregar categoría.'); return; }
-  data.categories.push({id: uid('cat'), nombre: nombre, color: color, mostrarEnDiario: true, presupuestoMensual: null});
+  if(!nombre){ alert('Falta el nombre de la categoría. Escríbelo arriba y vuelve a dar clic en Guardar.'); return; }
+  if(editId){
+    var cat = getCategoria(editId);
+    if(cat){
+      cat.nombre = nombre;
+      cat.color = color;
+    }
+    showToast('Categoría actualizada.');
+  } else {
+    data.categories.push({id: uid('cat'), nombre: nombre, color: color, mostrarEnDiario: true, presupuestoMensual: null});
+    showToast('Categoría creada.');
+  }
   marcarDatosPropios();
   saveData();
-  document.getElementById('formCategoria').reset();
-  document.getElementById('catColor').value = nextCategoryColor();
+  resetFormCategoria();
   renderAll();
-  showToast('Categoría creada.');
+}
+
+export function resetFormCategoria(){
+  document.getElementById('formCategoria').reset();
+  document.getElementById('editCatId').value = '';
+  document.getElementById('catFormTitulo').textContent = 'Nueva categoría';
+  document.getElementById('btnGuardarCategoria').textContent = 'Agregar categoría';
+  document.getElementById('btnCancelarEdicionCategoria').classList.add('hidden');
+  document.getElementById('catColor').value = nextCategoryColor();
+}
+
+export function fillCategoriaFormForEdit(id){
+  var cat = getCategoria(id);
+  if(!cat) return;
+  document.getElementById('editCatId').value = cat.id;
+  document.getElementById('catNombre').value = cat.nombre;
+  document.getElementById('catColor').value = cat.color;
+  document.getElementById('catFormTitulo').textContent = 'Editar categoría';
+  document.getElementById('btnGuardarCategoria').textContent = 'Actualizar categoría';
+  document.getElementById('btnCancelarEdicionCategoria').classList.remove('hidden');
+  document.getElementById('formCategoria').scrollIntoView({behavior:'smooth', block:'start'});
 }
 
 export function eliminarCategoria(id){
