@@ -44,10 +44,10 @@ export function quitarGeminiApiKey(){
   try{ localStorage.removeItem(GEMINI_KEY_STORAGE); }catch(err){ /* ignorar */ }
 }
 
-// Prueba mínima y gratuita: pide la lista de modelos disponibles para esa
-// clave. No genera contenido (no consume cuota de generación), solo
-// confirma que la clave es válida y que hay conexión con la API de Google.
-export function probarGeminiApiKey(key){
+// Lista cruda de modelos disponibles para esa clave (según la cuenta y
+// región de quien la creó — nunca es la misma lista para todos, por eso el
+// chat nunca debe asumir un nombre de modelo fijo, sino pedir esta lista).
+export function listarModelosGemini(key){
   var url = 'https://generativelanguage.googleapis.com/v1beta/models?key=' + encodeURIComponent(key);
   var controller = ('AbortController' in window) ? new AbortController() : null;
   var timeoutId = controller ? setTimeout(function(){ controller.abort(); }, 12000) : null;
@@ -62,8 +62,7 @@ export function probarGeminiApiKey(key){
       return resp.json();
     })
     .then(function(json){
-      var n = Array.isArray(json.models) ? json.models.length : 0;
-      return {ok:true, modelos:n};
+      return Array.isArray(json.models) ? json.models : [];
     })
     .catch(function(err){
       if(err && err.name === 'AbortError') throw new Error('tiempo de espera agotado. Revisa tu conexión e intenta de nuevo.');
@@ -72,4 +71,12 @@ export function probarGeminiApiKey(key){
     .finally(function(){
       if(timeoutId) clearTimeout(timeoutId);
     });
+}
+
+// Prueba mínima y gratuita: no genera contenido (no consume cuota de
+// generación), solo confirma que la clave es válida y que hay conexión.
+export function probarGeminiApiKey(key){
+  return listarModelosGemini(key).then(function(modelos){
+    return {ok:true, modelos: modelos.length};
+  });
 }
