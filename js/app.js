@@ -763,6 +763,8 @@ function init(){
     document.getElementById('perfilNombre').value = data.perfilNombre || '';
     document.getElementById('dFecha').value = dateKey(new Date());
     document.getElementById('fFecha').value = dateKey(new Date());
+    var hoyInforme = new Date();
+    document.getElementById('informeMes').value = hoyInforme.getFullYear() + '-' + String(hoyInforme.getMonth()+1).padStart(2,'0');
     updateFechaHint();
     updateNotiEstado();
     renderAll();

@@ -438,13 +438,19 @@
       <p class="hint" style="margin-top:8px;">Columnas del CSV: Frecuencia, Nombre, Categoria, TipoDeGasto, Ambito, Monto, MetaTotal, FechaLimite, Estado. Frecuencia acepta Fijo, Variable, Ahorro, Deuda o Diario. Para Deuda: Monto es la cuota mensual y MetaTotal es el saldo actual. Para Diario: Nombre es la nota (opcional) y FechaLimite es la fecha del gasto.</p>
     </div>
     <div class="card">
-      <h2>Imprimir / Guardar como PDF</h2>
-      <p class="small muted">Genera una hoja limpia de una página con tus pagos del mes, tu nombre y la fecha. En la ventana de impresión elige "Guardar como PDF" si prefieres un archivo.</p>
-      <div class="field">
-        <label for="perfilNombre">Tu nombre (aparece en la hoja impresa)</label>
-        <input type="text" id="perfilNombre" placeholder="Ej: Juan Pérez">
+      <h2>Informe mensual / Guardar como PDF</h2>
+      <p class="small muted">Genera un informe completo del mes que elijas: resumen, gráficos de gasto por categoría y de distribución, más el detalle de gastos diarios, pagos programados y deudas. Si eliges el mes actual, el informe llega hasta hoy; si eliges un mes anterior, sale completo. En la ventana de impresión elige "Guardar como PDF" si prefieres un archivo.</p>
+      <div class="form-row">
+        <div class="field">
+          <label for="perfilNombre">Tu nombre (aparece en la hoja impresa)</label>
+          <input type="text" id="perfilNombre" placeholder="Ej: Juan Pérez">
+        </div>
+        <div class="field">
+          <label for="informeMes">Mes del informe</label>
+          <input type="month" id="informeMes">
+        </div>
       </div>
-      <button class="btn secondary" id="btnImprimir">🖨️ Imprimir / Guardar PDF</button>
+      <button class="btn secondary" id="btnImprimir">🖨️ Generar informe / Imprimir</button>
     </div>
     <div class="card">
       <h2>Borrar datos</h2>
