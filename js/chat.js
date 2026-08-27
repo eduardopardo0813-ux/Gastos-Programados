@@ -43,10 +43,19 @@ function obtenerCandidatosModelo(apiKey){
     if(!candidatos.length){
       throw new Error('tu clave no tiene ningún modelo de texto disponible (solo modelos de voz/imagen/embeddings).');
     }
-    // Se prefieren los modelos "flash" (rápidos y económicos); el resto
-    // (ej. "pro") queda como respaldo si esos fallan.
+    // Se prefieren los modelos "flash" con nombre limpio (sin "preview",
+    // "exp", "thinking", "image", "live" — variantes más propensas a
+    // comportarse raro o no responder en texto plano); esas quedan como
+    // último recurso, después incluso de los modelos "pro" estándar.
+    var raro = /preview|exp|thinking|image|-live/i;
     candidatos.sort(function(a,b){
-      function puntaje(m){ return /flash/i.test(m.name) ? 0 : 1; }
+      function puntaje(m){
+        if(/flash/i.test(m.name) && !raro.test(m.name)) return 0;
+        if(/pro/i.test(m.name) && !raro.test(m.name)) return 1;
+        if(/flash/i.test(m.name)) return 2;
+        if(/pro/i.test(m.name)) return 3;
+        return 4;
+      }
       return puntaje(a) - puntaje(b);
     });
     var nombres = candidatos.map(function(m){ return m.name; }); // ya vienen como "models/xxx"
@@ -55,15 +64,23 @@ function obtenerCandidatosModelo(apiKey){
   });
 }
 
-// Intenta generar contenido con un modelo; si Google responde 404 para ese
-// modelo puntual, prueba con el siguiente candidato de la lista en vez de
-// rendirse. Cualquier otro tipo de error (clave rechazada, bloqueo de
-// seguridad, etc.) no es reintentable y se reporta tal cual.
-function intentarConModelos(apiKey, contents, nombres, idx, ultimoError){
+// Cuánto se espera cada modelo antes de darlo por colgado y pasar al
+// siguiente candidato. Corto a propósito: si un modelo va a responder, un
+// "flash" lo hace en pocos segundos — esperar 30s por cada uno hacía que
+// probar 2-3 candidatos se sintiera eterno.
+var TIMEOUT_POR_MODELO_MS = 15000;
+
+// Intenta generar contenido con un modelo; si falla por un problema de ESE
+// modelo puntual (404, 400 no relacionado con la clave, o que se cuelgue y
+// agote el tiempo de espera), prueba con el siguiente candidato de la
+// lista en vez de rendirse. Solo una clave rechazada (403, o un 400 que
+// mencione explícitamente la API key) corta la cadena de una vez.
+function intentarConModelos(apiKey, contents, nombres, idx, ultimoError, onProgreso){
   if(idx >= nombres.length){
     return Promise.reject(ultimoError || new Error('no se encontró ningún modelo de Gemini que funcione con tu clave.'));
   }
   var modeloNombre = nombres[idx];
+  if(onProgreso) onProgreso(modeloNombre, idx + 1, nombres.length);
   var url = 'https://generativelanguage.googleapis.com/v1beta/' + modeloNombre + ':generateContent?key=' + encodeURIComponent(apiKey);
   var body = {
     systemInstruction: {parts: [{text: construirSystemInstruction()}]},
@@ -71,7 +88,7 @@ function intentarConModelos(apiKey, contents, nombres, idx, ultimoError){
     generationConfig: {responseMimeType: 'application/json', responseSchema: RESPONSE_SCHEMA}
   };
   var controller = ('AbortController' in window) ? new AbortController() : null;
-  var timeoutId = controller ? setTimeout(function(){ controller.abort(); }, 30000) : null;
+  var timeoutId = controller ? setTimeout(function(){ controller.abort(); }, TIMEOUT_POR_MODELO_MS) : null;
   var opts = {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)};
   if(controller) opts.signal = controller.signal;
 
@@ -124,10 +141,14 @@ function intentarConModelos(apiKey, contents, nombres, idx, ultimoError){
     .catch(function(err){
       if(timeoutId) clearTimeout(timeoutId);
       if(err && err.name === 'AbortError'){
-        return Promise.reject(new Error('tiempo de espera agotado. Intenta de nuevo.'));
+        // El modelo no respondió a tiempo — se trata igual que un modelo
+        // que rechaza la llamada: se prueba el siguiente candidato.
+        var errTimeout = new Error('el modelo "' + modeloNombre + '" no respondió a tiempo.');
+        errTimeout.reintentable = true;
+        return intentarConModelos(apiKey, contents, nombres, idx + 1, errTimeout, onProgreso);
       }
       if(err && err.reintentable){
-        return intentarConModelos(apiKey, contents, nombres, idx + 1, err);
+        return intentarConModelos(apiKey, contents, nombres, idx + 1, err, onProgreso);
       }
       return Promise.reject(err);
     })
@@ -216,7 +237,7 @@ function construirContentsDesdeHistorial(){
   });
 }
 
-function llamarGemini(apiKey, contents){
+function llamarGemini(apiKey, contents, onProgreso){
   return obtenerCandidatosModelo(apiKey).then(function(nombres){
     // El último modelo que funcionó se prueba primero — evita repetir la
     // ronda completa de candidatos en cada mensaje una vez se encontró uno bueno.
@@ -224,7 +245,7 @@ function llamarGemini(apiKey, contents){
     if(ultimoModeloQueFunciono && nombres.indexOf(ultimoModeloQueFunciono) !== -1){
       ordenados = [ultimoModeloQueFunciono].concat(nombres.filter(function(n){ return n !== ultimoModeloQueFunciono; }));
     }
-    return intentarConModelos(apiKey, contents, ordenados, 0, null);
+    return intentarConModelos(apiKey, contents, ordenados, 0, null, onProgreso);
   });
 }
 
@@ -335,7 +356,13 @@ function enviarMensajeUsuario(){
   renderMensajes();
   var idxPlaceholder = historial.length - 1;
 
-  llamarGemini(key, contentsParaEnviar).then(function(parsed){
+  llamarGemini(key, contentsParaEnviar, function(modeloNombre, intento, total){
+    // Progreso en vivo: si hay que probar más de un modelo, se ve cuál se
+    // está intentando en vez de dejar "Pensando..." fijo sin explicación.
+    var etiqueta = total > 1 ? (' (' + intento + '/' + total + ')') : '';
+    historial[idxPlaceholder].text = '⏳ Pensando' + etiqueta + '...';
+    renderMensajes();
+  }).then(function(parsed){
     historial[idxPlaceholder] = {
       role: 'model',
       text: parsed.respuesta || '(el asistente no devolvió texto)',
