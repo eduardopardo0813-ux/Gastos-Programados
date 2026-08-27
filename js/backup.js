@@ -9,7 +9,7 @@ import { data, saveData, assignData, migrateData } from './store.js';
 import { getActiveFixedOccurrence, generateOccurrences } from './scheduled.js';
 import { getActiveAhorroOccurrence } from './savings.js';
 import { getActiveDebtOccurrence, debtTipoLabel } from './debts.js';
-import { getCategoria, nextCategoryColor } from './categories.js';
+import { getCategoria, resolverOCrearCategoriaPorNombre } from './categories.js';
 import { renderAll, renderBannerBackup } from './app.js';
 
 // ---------- JSON ----------
@@ -179,14 +179,6 @@ export function importarCsv(file){
       }
       var hoy = startOfDay(new Date());
       var agregados = 0, omitidos = 0, duplicados = 0;
-      function resolverCategoriaId(categoriaNombre){
-        if(!categoriaNombre) return null;
-        var catExistente = data.categories.find(function(c){ return c.nombre.trim().toLowerCase()===categoriaNombre.toLowerCase(); });
-        if(catExistente) return catExistente.id;
-        var nuevaCat = {id: uid('cat'), nombre: categoriaNombre, color: nextCategoryColor(), mostrarEnDiario: true, presupuestoMensual: null};
-        data.categories.push(nuevaCat);
-        return nuevaCat.id;
-      }
       rows.slice(1).forEach(function(r){
         var frecuencia = (r[iFrecuencia]||'').trim().toLowerCase();
         var nombre = (r[iNombre]||'').trim();
@@ -256,11 +248,11 @@ export function importarCsv(file){
           data.debts.push(debtImp);
         } else if(frecuencia === 'diario'){
           data.dailyExpenses.push({
-            id: idCsv || uid('daily'), categoriaId: resolverCategoriaId(categoriaNombre), monto: monto,
+            id: idCsv || uid('daily'), categoriaId: resolverOCrearCategoriaPorNombre(categoriaNombre), monto: monto,
             nota: nombre, fecha: fechaStr, ambito: 'personal', creadoEn: Date.now()
           });
         } else {
-          var categoriaId = resolverCategoriaId(categoriaNombre);
+          var categoriaId = resolverOCrearCategoriaPorNombre(categoriaNombre);
           if(frecuencia === 'fijo'){
             var exp = {
               id: idCsv || uid('exp'), nombre: nombre, monto: monto, categoriaId: categoriaId, ambito: ambito, tipoGasto: tipoGasto,

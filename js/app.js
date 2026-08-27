@@ -43,6 +43,7 @@ import {
 import {
   getGeminiApiKey, guardarGeminiApiKey, quitarGeminiApiKey, probarGeminiApiKey
 } from './ai.js';
+import { abrirChatIA, confirmarAccionChat, cancelarAccionChat } from './chat.js';
 
 var INDICADOR_URL = 'https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC';
 
@@ -647,6 +648,8 @@ function wireEvents(){
     });
   });
 
+  document.getElementById('chatFab').addEventListener('click', abrirChatIA);
+
   document.getElementById('modalOverlay').addEventListener('click', function(e){
     if(e.target.id === 'modalOverlay') closeModal();
   });
@@ -782,6 +785,10 @@ function wireEvents(){
       }
       renderBarraCategorias();
       renderUltimosRegistros();
+    } else if(action === 'confirmar-accion-chat'){
+      confirmarAccionChat(Number(el.dataset.msgidx));
+    } else if(action === 'cancelar-accion-chat'){
+      cancelarAccionChat(Number(el.dataset.msgidx));
     } else if(action === 'quitar-filtro-diario'){
       state.dailyFiltroCategorias = null;
       state.dailyFiltroLabel = null;

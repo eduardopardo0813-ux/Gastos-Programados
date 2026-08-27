@@ -227,6 +227,34 @@ function eliminarDailyPorId(id){
   saveData();
 }
 
+// Validación + creación de un gasto diario, sin nada de UI: la reutilizan
+// tanto la hoja de registro manual como el asistente de IA (chat.js), para
+// que las dos vías respeten exactamente las mismas reglas. Devuelve
+// {ok:false, mensaje} si algo no es válido, o {ok:true, entry} si se guardó.
+export function registrarGastoDiario(categoriaId, monto, nota, fechaStr){
+  if(!categoriaId){
+    return {ok:false, mensaje:'Elige una categoría para este gasto.'};
+  }
+  if(monto === undefined || monto === null || monto === '' || isNaN(monto) || Number(monto) === 0){
+    return {ok:false, mensaje:'Escribe cuánto gastaste para poder guardarlo.'};
+  }
+  monto = Number(monto);
+  if(monto < 0){
+    return {ok:false, mensaje:'El monto debe ser un número mayor a cero.'};
+  }
+  if(monto > 999999999){
+    return {ok:false, mensaje:'Ese monto parece demasiado alto. Revisa que no sobren ceros.'};
+  }
+  var nuevo = {
+    id: uid('daily'), categoriaId: categoriaId, monto: monto, nota: (nota||'').trim(),
+    fecha: fechaStr || dateKey(new Date()), ambito: 'personal', creadoEn: Date.now()
+  };
+  data.dailyExpenses.push(nuevo);
+  marcarDatosPropios();
+  saveData();
+  return {ok:true, entry: nuevo};
+}
+
 function handleDailySheetSubmit(e){
   e.preventDefault();
   var editId = document.getElementById('dailyEditId').value;
@@ -242,27 +270,11 @@ function handleDailySheetSubmit(e){
     ? fechaInput.value
     : dateKey(new Date());
 
-  if(!categoriaId){
-    alert('Elige una categoría para este gasto.');
-    return;
-  }
-  if(!montoDigits || monto === 0){
-    alert('Escribe cuánto gastaste para poder guardarlo.');
-    return;
-  }
-  if(isNaN(monto) || monto < 0){
-    alert('El monto debe ser un número mayor a cero.');
-    return;
-  }
-  if(monto > 999999999){
-    alert('Ese monto parece demasiado alto. Revisa que no sobren ceros.');
-    return;
-  }
-
-  var cat = getCategoria(categoriaId);
-  var catNombre = cat ? cat.nombre : 'esa categoría';
-
   if(editId){
+    if(!categoriaId){ alert('Elige una categoría para este gasto.'); return; }
+    if(!montoDigits || monto === 0){ alert('Escribe cuánto gastaste para poder guardarlo.'); return; }
+    if(isNaN(monto) || monto < 0){ alert('El monto debe ser un número mayor a cero.'); return; }
+    if(monto > 999999999){ alert('Ese monto parece demasiado alto. Revisa que no sobren ceros.'); return; }
     var entry = data.dailyExpenses.find(function(x){ return x.id===editId; });
     if(entry){
       entry.categoriaId = categoriaId;
@@ -275,22 +287,23 @@ function handleDailySheetSubmit(e){
     closeModal();
     renderAll();
     showToast('Gasto actualizado.');
-  } else {
-    var nuevo = {
-      id: uid('daily'), categoriaId: categoriaId, monto: monto, nota: nota,
-      fecha: fechaStr, ambito: 'personal', creadoEn: Date.now()
-    };
-    data.dailyExpenses.push(nuevo);
-    marcarDatosPropios();
-    saveData();
-    closeModal();
-    renderAll();
-    showToastAccion('Gasto registrado · ' + currency.format(monto) + ' en ' + catNombre, 'Deshacer', function(){
-      eliminarDailyPorId(nuevo.id);
-      renderAll();
-      showToast('Registro deshecho.');
-    }, 6000);
+    return;
   }
+
+  var res = registrarGastoDiario(categoriaId, monto, nota, fechaStr);
+  if(!res.ok){
+    alert(res.mensaje);
+    return;
+  }
+  var cat = getCategoria(categoriaId);
+  var catNombre = cat ? cat.nombre : 'esa categoría';
+  closeModal();
+  renderAll();
+  showToastAccion('Gasto registrado · ' + currency.format(res.entry.monto) + ' en ' + catNombre, 'Deshacer', function(){
+    eliminarDailyPorId(res.entry.id);
+    renderAll();
+    showToast('Registro deshecho.');
+  }, 6000);
 }
 
 // ---------- eliminar / deshacer desde la lista (§2.5) ----------

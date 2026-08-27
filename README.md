@@ -33,6 +33,7 @@ Todos los datos se guardan solo en `localStorage` del navegador — no hay backe
 │   ├── categories.js       # categorías y presupuestos
 │   ├── backup.js           # exportar/importar JSON y CSV, impresión
 │   ├── ai.js               # conexión con Gemini: clave de API, prueba de conexión
+│   ├── chat.js             # asistente financiero: preguntas + registro de gastos por texto
 │   └── app.js               # init, navegación, orquestación de renders
 └── README.md
 ```
@@ -98,5 +99,26 @@ en una llave separada del resto de los datos (`js/ai.js`, no `js/store.js`),
 a propósito para que **nunca quede incluida en las copias de seguridad
 JSON/CSV** que alguien exporte o comparta. "Probar conexión" hace una
 llamada real y gratuita (lista de modelos, no genera contenido) para
-confirmar que la clave funciona. Las funciones de IA en sí (qué hace la app
-con Gemini) todavía están por definirse — esto es solo la conexión base.
+confirmar que la clave funciona.
+
+## Asistente financiero (chat)
+
+Botón flotante 🤖 visible en cualquier pantalla (arriba de la barra de
+navegación en móvil). Abre un chat que ve **todo el historial guardado**
+(categorías, gastos diarios, programados, deudas, ahorro — reconstruido
+desde los datos actuales en cada pregunta, así que nunca queda desactualizado
+a mitad de la conversación) para responder preguntas sobre tus finanzas.
+
+También puede proponer registrar un gasto diario a partir de una frase
+("gasté 15 mil en el mercado hoy"), pero **nunca lo guarda solo**: muestra
+una tarjeta con el monto, la categoría y la fecha que entendió, y el usuario
+tiene que tocar "Confirmar" — reutiliza exactamente la misma validación que
+la hoja de registro manual (`registrarGastoDiario` en `js/daily.js`), así
+que las dos vías respetan las mismas reglas. Si la categoría que menciona no
+existe, la crea igual que ya hace la importación de CSV (`resolverOCrearCategoriaPorNombre`
+en `js/categories.js`).
+
+La conversación vive solo en memoria (se reinicia al recargar la página) y
+requiere tener guardada una clave de Gemini en Ajustes. Cada pregunta envía
+tus datos financieros a la API de Google junto con tu clave — vale la pena
+tenerlo presente.

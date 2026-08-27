@@ -15,6 +15,20 @@ export function getCategoria(id){
   return data.categories.find(function(c){ return c.id===id; });
 }
 
+// Busca una categoría existente por nombre (sin distinguir mayúsculas) y,
+// si no existe, la crea. Usado tanto al importar un CSV como al confirmar
+// un gasto propuesto por el asistente de IA — una sola forma de resolver
+// "nombre de categoría en texto libre" → id real en toda la app.
+export function resolverOCrearCategoriaPorNombre(nombre){
+  nombre = String(nombre||'').trim();
+  if(!nombre) return null;
+  var existente = data.categories.find(function(c){ return c.nombre.trim().toLowerCase()===nombre.toLowerCase(); });
+  if(existente) return existente.id;
+  var nueva = {id: uid('cat'), nombre: nombre, color: nextCategoryColor(), mostrarEnDiario: true, presupuestoMensual: null};
+  data.categories.push(nueva);
+  return nueva.id;
+}
+
 export function catChipHtml(categoriaId){
   var cat = getCategoria(categoriaId);
   if(!cat) return '<span class="cat-chip"><span class="cat-dot" style="background:#c3c2b7"></span>Sin categoría</span>';
