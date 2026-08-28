@@ -34,6 +34,12 @@ export function importarDatos(file){
     try{
       var parsed = JSON.parse(reader.result);
       if(!parsed || !Array.isArray(parsed.categories)) throw new Error('formato inválido');
+      // Cargar este archivo BORRA y REEMPLAZA todo lo que ya tienes
+      // guardado (no se suma) — es una acción que no se puede deshacer, así
+      // que se avisa claramente antes de tocar nada.
+      if(!confirm('Cargar esta copia va a REEMPLAZAR todos tus datos actuales por los de este archivo. Lo que tengas guardado ahora se perderá y no se puede deshacer. ¿Continuar?')){
+        return;
+      }
       parsed.notifiedLog = parsed.notifiedLog || {};
       parsed.fixedExpenses = parsed.fixedExpenses || [];
       parsed.variableExpenses = parsed.variableExpenses || [];
@@ -43,9 +49,9 @@ export function importarDatos(file){
       saveData();
       renderAll();
       document.getElementById('perfilNombre').value = data.perfilNombre || '';
-      showToast('Copia importada correctamente.');
+      showToast('Copia cargada correctamente.');
     }catch(err){
-      alert('No se pudo leer el archivo. Verifica que sea una copia de seguridad válida.');
+      alert('No se pudo leer este archivo. Verifica que sea una copia de seguridad válida (descargada antes desde esta misma app).');
     }
   };
   reader.readAsText(file);

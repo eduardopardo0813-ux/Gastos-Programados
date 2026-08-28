@@ -299,7 +299,7 @@ function handleDailySheetSubmit(e){
   var catNombre = cat ? cat.nombre : 'esa categoría';
   closeModal();
   renderAll();
-  showToastAccion('Gasto registrado · ' + currency.format(res.entry.monto) + ' en ' + catNombre, 'Deshacer', function(){
+  showToastAccion('Gasto registrado · ' + currency.format(res.entry.monto) + ' en ' + catNombre, 'Deshacer (6s)', function(){
     eliminarDailyPorId(res.entry.id);
     renderAll();
     showToast('Registro deshecho.');

@@ -204,7 +204,7 @@ export function eliminarCategoria(id){
     abrirModalReasignarCategoria(id, nProgramados, nDiarios, otras);
     return;
   }
-  if(!confirm('¿Eliminar esta categoría?')) return;
+  if(!confirm('¿Eliminar esta categoría? Esta acción no se puede deshacer.')) return;
   data.categories = data.categories.filter(function(c){ return c.id!==id; });
   saveData();
   renderAll();
@@ -217,7 +217,7 @@ export function abrirModalReasignarCategoria(catId, nProgramados, nDiarios, otra
   var html =
     '<button class="modal-close" data-action="cerrar-modal">✕</button>' +
     '<h3>Reasignar gastos</h3>' +
-    '<p class="small muted">Esta categoría tiene '+partes.join(' y ')+'. ¿A qué categoría los movemos?</p>' +
+    '<p class="small muted">Esta categoría tiene '+partes.join(' y ')+'. ¿A qué categoría los movemos? (La categoría se elimina; esto no se puede deshacer, pero tus gastos quedan a salvo en la categoría que elijas.)</p>' +
     '<div class="field">' +
       '<label for="reasignarCategoriaSelect">Mover a</label>' +
       '<select id="reasignarCategoriaSelect">' +

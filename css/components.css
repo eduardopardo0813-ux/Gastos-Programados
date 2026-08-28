@@ -107,7 +107,9 @@ button{font-family:inherit;}
 .btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--brand);}
 .btn.danger{background:rgba(208,59,59,0.12);color:#e66767;border:1px solid rgba(208,59,59,0.55);}
 .btn.danger:hover{background:rgba(208,59,59,0.22);}
-.btn.small{padding:6px 10px;font-size:0.78rem;border-radius:7px;}
+/* min-height/min-width de 40px: son botones chicos, pero deben seguir
+   siendo fáciles de tocar con el dedo (muchos son solo un ícono: ✎ 🗑 💰). */
+.btn.small{padding:8px 12px;font-size:0.8rem;border-radius:7px;min-height:40px;min-width:40px;}
 .btn:disabled{opacity:.5;cursor:not-allowed;}
 
 /* sub-pestañas de "Programados" y "Ahorro y deudas" (§1.4) */
@@ -151,6 +153,14 @@ button{font-family:inherit;}
 .estimado-tag{font-weight:500;font-size:0.72rem;color:var(--muted);white-space:normal;}
 .occ-actions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;}
 .occ-actions-row{display:flex;gap:6px;}
+/* En pantallas angostas, el monto y los botones bajan a su propia fila en
+   vez de compartir el ancho con el título — así un nombre largo (ej.
+   "Internet y telefonía del negocio") no queda partido en una palabra por
+   línea por falta de espacio. */
+@media (max-width:480px){
+  .occ-row{flex-direction:column;align-items:stretch;}
+  .occ-actions{flex-direction:row;justify-content:space-between;align-items:center;width:100%;margin-top:6px;}
+}
 
 .cat-chip{display:inline-flex;align-items:center;gap:5px;font-size:0.78rem;color:var(--text-secondary);}
 .cat-dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto;}
@@ -161,10 +171,13 @@ form .field{margin-bottom:12px;}
 form label{display:block;font-size:0.85rem;font-weight:600;margin-bottom:4px;}
 form .hint,.hint{font-size:0.76rem;color:var(--muted);margin-top:3px;}
 .hint a{color:var(--brand-dark);}
-input[type=text],input[type=number],input[type=date],input[type=month],select,input[type=color]{
+input[type=text],input[type=number],input[type=date],input[type=month],input[type=password],select,input[type=color]{
   width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);
-  background:var(--surface-2);font-size:0.92rem;color:var(--text-primary);font-family:inherit;
+  background:var(--surface-2);font-size:1rem;color:var(--text-primary);font-family:inherit;
 }
+/* El texto de un campo se ve al menos a 16px a propósito: por debajo de
+   eso, Safari en iPhone hace zoom automático al tocar el campo — molesto
+   para quien no sabe que puede des-hacerlo con un pellizco. */
 input[type=color]{padding:3px;height:38px;width:60px;}
 
 /* clave de API de Gemini: input + botón de mostrar/ocultar en la misma fila */
@@ -265,7 +278,11 @@ details.opciones[open] summary{margin-bottom:4px;}
 .daily-row .acciones{display:flex;gap:6px;}
 
 /* gastos diarios: hoja de registro — el monto es el protagonista (§2.3) */
-.daily-monto-input{
+/* input[type=text].daily-monto-input (no solo .daily-monto-input): la regla
+   general de inputs de arriba también selecciona por input[type=text], con
+   más especificidad que una clase sola — sin este calce exacto, esta regla
+   quedaba pisada en silencio y el monto nunca se veía grande de verdad. */
+input[type=text].daily-monto-input{
   font-size:2rem;font-weight:700;text-align:center;padding:14px 10px;
   font-variant-numeric:tabular-nums;
 }

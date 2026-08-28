@@ -13,7 +13,8 @@
   <header class="top">
     <h1>💳 Control de Pagos</h1>
     <p class="tagline">Tu control simple de pagos, gastos y ahorro</p>
-    <p class="purpose">Registra lo que debes pagar cada mes, márcalo cuando lo pagues y separa dinero para tus metas. Todo se guarda solo en este navegador — no se envía a ningún servidor.</p>
+    <p class="purpose">Aquí anotas lo que gastas y lo que debes pagar cada mes: para empezar, toca una categoría en "Registro rápido" (más abajo) y escribe tu primer gasto.</p>
+    <p class="purpose">Todo se guarda solo en este navegador — no se envía a ningún servidor.</p>
     <div class="sub" id="fechaHoyTexto"></div>
   </header>
 
@@ -423,23 +424,26 @@
       <p class="small" id="notiEstado" style="margin-top:8px;"></p>
     </div>
     <div class="card">
-      <h2>Copia de seguridad (JSON)</h2>
-      <p class="small muted">Copia completa de tus datos, ideal para pasar todo a otro computador o navegador. Tus datos se guardan solo en este navegador.</p>
+      <h2>Copia de seguridad completa</h2>
+      <p class="small muted">Guarda un archivo con absolutamente todos tus datos, ideal para pasarlos a otro computador o navegador, o para tener un respaldo. Importar un archivo <strong>reemplaza todo</strong> lo que tengas guardado ahora.</p>
       <div class="form-actions">
-        <button class="btn secondary" id="btnExportar">Exportar copia (.json)</button>
-        <button class="btn secondary" id="btnImportarTrigger">Importar copia (.json)</button>
+        <button class="btn secondary" id="btnExportar">Descargar copia completa</button>
+        <button class="btn secondary" id="btnImportarTrigger">Cargar una copia</button>
         <input type="file" id="inputImportar" accept="application/json" style="display:none;">
       </div>
     </div>
     <div class="card">
-      <h2>Exportar / Importar en Excel (CSV)</h2>
-      <p class="small muted">Descarga tus gastos y metas de ahorro en un archivo que abre bien en Excel en español, o carga un CSV con esas mismas columnas para agregar registros.</p>
+      <h2>Exportar / Importar en Excel</h2>
+      <p class="small muted">Descarga tus gastos y metas de ahorro en un archivo que abre bien en Excel, o carga uno con esas mismas columnas para agregar registros (esto no borra nada, solo suma lo nuevo).</p>
       <div class="form-actions">
-        <button class="btn secondary" id="btnExportarCsv">Exportar a Excel (.csv)</button>
-        <button class="btn secondary" id="btnImportarCsvTrigger">Importar desde Excel (.csv)</button>
+        <button class="btn secondary" id="btnExportarCsv">Descargar para Excel</button>
+        <button class="btn secondary" id="btnImportarCsvTrigger">Cargar desde Excel</button>
         <input type="file" id="inputImportarCsv" accept=".csv,text/csv" style="display:none;">
       </div>
-      <p class="hint" style="margin-top:8px;">Columnas del CSV: Frecuencia, Nombre, Categoria, TipoDeGasto, Ambito, Monto, MetaTotal, FechaLimite, Estado. Frecuencia acepta Fijo, Variable, Ahorro, Deuda o Diario. Para Deuda: Monto es la cuota mensual y MetaTotal es el saldo actual. Para Diario: Nombre es la nota (opcional) y FechaLimite es la fecha del gasto.</p>
+      <details class="opciones" style="margin-top:8px;">
+        <summary>Detalles del archivo (para quien quiera armarlo a mano) ▾</summary>
+        <p class="hint">Columnas: Frecuencia, Nombre, Categoria, TipoDeGasto, Ambito, Monto, MetaTotal, FechaLimite, Estado. Frecuencia acepta Fijo, Variable, Ahorro, Deuda o Diario. Para Deuda: Monto es la cuota mensual y MetaTotal es el saldo actual. Para Diario: Nombre es la nota (opcional) y FechaLimite es la fecha del gasto.</p>
+      </details>
     </div>
     <div class="card">
       <h2>Informe mensual / Guardar como PDF</h2>
@@ -458,19 +462,19 @@
     </div>
     <div class="card">
       <h2>Borrar datos</h2>
-      <p class="small muted">Elimina todos los gastos y categorías guardados en este navegador. Esta acción no se puede deshacer, y tampoco hay copia en ningún servidor: si no exportaste una copia (arriba) antes de borrar, esos datos se pierden para siempre. Lo mismo pasa si borras el caché/datos de navegación del navegador o usas modo incógnito: perderás todo sin aviso.</p>
+      <p class="small muted"><strong>Esta acción no se puede deshacer.</strong> Borra todos los gastos y categorías guardados en este navegador, para siempre. Si no descargaste una copia de seguridad (arriba) antes de borrar, esos datos se pierden y no hay forma de recuperarlos. Lo mismo pasa si borras los datos de este sitio desde la configuración del navegador, o si usabas una ventana de incógnito/privada: se pierde todo sin aviso.</p>
       <button class="btn danger" id="btnBorrarTodo">Borrar todos mis datos</button>
     </div>
     <div class="card">
-      <h2>🤖 Inteligencia artificial (Gemini)</h2>
-      <p class="small muted">Conecta tu propia clave de API de Google Gemini para las funciones de IA de la app. Tu clave se guarda solo en este navegador: nunca se incluye en las copias de seguridad (.json/.csv), nunca se envía a ningún servidor propio, y nunca viaja a otra parte que no sea la API de Google al usarla. Si compartes esta app con alguien más, cada persona debe ingresar la suya — nadie usa la tuya.</p>
+      <h2>🤖 Asistente con inteligencia artificial</h2>
+      <p class="small muted">Para usar el asistente (el botón 🤖 flotante), necesitas conectar tu propia clave gratuita de Google Gemini — es como una contraseña que te identifica a ti, no al creador de esta app. Se guarda solo en este navegador: nunca se incluye en las copias de seguridad, nunca se envía a ningún servidor propio. Si compartes esta app con alguien más, cada persona debe poner la suya — nadie usa la tuya.</p>
       <div class="field">
-        <label for="geminiApiKeyInput">Clave de API de Gemini</label>
+        <label for="geminiApiKeyInput">Tu clave de Gemini</label>
         <div class="gemini-key-row">
           <input type="password" id="geminiApiKeyInput" placeholder="Pega aquí tu clave" autocomplete="off" spellcheck="false">
-          <button type="button" class="btn secondary small" id="btnVerGeminiKey" title="Mostrar/ocultar">👁</button>
+          <button type="button" class="btn secondary small" id="btnVerGeminiKey" title="Mostrar u ocultar la clave">👁</button>
         </div>
-        <div class="hint">Consíguela gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a>. Nunca la compartas ni la pegues en otro sitio.</div>
+        <div class="hint">Consíguela gratis en <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a> (con tu cuenta de Google). Nunca la compartas ni la pegues en otro sitio.</div>
       </div>
       <div class="form-actions">
         <button class="btn secondary" id="btnGuardarGeminiKey">Guardar clave</button>

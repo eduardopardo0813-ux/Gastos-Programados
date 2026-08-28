@@ -231,6 +231,19 @@ function construirSystemInstruction(){
   );
 }
 
+// Traduce cualquier error interno (que puede traer texto técnico de Google,
+// nombres de modelo, códigos de estado) a un mensaje simple en español para
+// mostrar en el chat. El detalle técnico real solo va a la consola, nunca a
+// la pantalla — quien usa la app no tiene por qué entender esos términos.
+function mensajeAmigableDeError(err){
+  var texto = (err && err.message) || '';
+  if(/clave/i.test(texto)) return 'No pude conectarme: revisa que tu clave de Gemini esté bien copiada en Ajustes (al final de la página).';
+  if(/no respondió a tiempo|tiempo de espera/i.test(texto)) return 'El asistente está tardando más de lo normal. Intenta de nuevo en un momento.';
+  if(/ningún modelo/i.test(texto)) return 'Tu cuenta de Gemini no tiene ningún asistente de texto disponible en este momento.';
+  if(/filtros de seguridad/i.test(texto)) return 'Esa pregunta no se pudo responder por las reglas de Google. Intenta escribirla de otra forma.';
+  return 'No pude responder en este momento. Intenta de nuevo en unos segundos.';
+}
+
 function construirContentsDesdeHistorial(){
   return historial.filter(function(m){ return !m.esPlaceholder; }).map(function(m){
     return {role: m.role, parts: [{text: m.text}]};
@@ -371,7 +384,8 @@ function enviarMensajeUsuario(){
     };
     renderMensajes();
   }).catch(function(err){
-    historial[idxPlaceholder] = {role: 'model', text: '❌ No pude responder: ' + err.message};
+    console.error('Error del asistente financiero:', err);
+    historial[idxPlaceholder] = {role: 'model', text: '❌ ' + mensajeAmigableDeError(err)};
     renderMensajes();
   });
 }

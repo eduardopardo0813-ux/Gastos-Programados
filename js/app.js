@@ -47,6 +47,25 @@ import { abrirChatIA, confirmarAccionChat, cancelarAccionChat } from './chat.js'
 
 var INDICADOR_URL = 'https://www.datos.gov.co/resource/32sa-8pi3.json?$limit=1&$order=vigenciadesde%20DESC';
 
+// ---------- red de seguridad global ----------
+// Para quien usa esta app sin haberla construido, una pantalla que se
+// queda "pegada" sin ningún aviso es lo peor que puede pasar. Si algo
+// truena en cualquier parte del código que no lo esperábamos (un botón, un
+// cálculo, una promesa sin atrapar), esto avisa siempre con un mensaje en
+// español en vez de dejar la pantalla congelada sin explicación. Se separa
+// del resto de los try/catch: esos ya muestran su propio mensaje más
+// específico; esto es solo el último resguardo para lo que se escape.
+var ultimoAvisoErrorGlobal = 0;
+function avisarErrorInesperado(detalle){
+  console.error(detalle);
+  var ahora = Date.now();
+  if(ahora - ultimoAvisoErrorGlobal < 4000) return; // evita bombardear con varios avisos seguidos
+  ultimoAvisoErrorGlobal = ahora;
+  showToast('⚠️ Algo no funcionó como debía. Si la pantalla se ve rara, recarga la página.');
+}
+window.addEventListener('error', function(e){ avisarErrorInesperado(e.error || e.message); });
+window.addEventListener('unhandledrejection', function(e){ avisarErrorInesperado(e.reason); });
+
 // ---------- navegación (§1.2/§1.3/§1.4) ----------
 // Mapea los nombres de pestaña "históricos" (usados en varios botones
 // data-action="ir-tab" ya existentes: gastos, calendario, ahorro, deudas,
@@ -503,7 +522,17 @@ export function actualizarIndicador(){
     })
     .catch(function(err){
       state.indicador.cargando = false;
-      state.indicador.error = (err && err.name === 'AbortError') ? 'tiempo de espera agotado' : ((err && err.message) ? err.message : 'error de conexión');
+      // fetch() puede rechazar con un mensaje del navegador que ni está en
+      // español ni dice nada útil para quien no programó esto (ej. "Failed
+      // to fetch") — se traduce a algo entendible en vez de mostrarlo tal cual.
+      if(err && err.name === 'AbortError'){
+        state.indicador.error = 'tardó demasiado en responder';
+      } else if(err instanceof TypeError){
+        state.indicador.error = 'no se pudo conectar a internet';
+      } else {
+        state.indicador.error = 'error de conexión';
+      }
+      console.error('Error al consultar el indicador:', err);
     })
     .finally(function(){
       if(timeoutId) clearTimeout(timeoutId);
@@ -512,7 +541,7 @@ export function actualizarIndicador(){
 }
 
 export function borrarTodo(){
-  if(!confirm('Esto eliminará TODOS tus gastos y categorías guardados en este navegador. ¿Continuar?')) return;
+  if(!confirm('Esto eliminará TODOS tus gastos y categorías guardados en este navegador, PARA SIEMPRE. No hay forma de deshacer esto. ¿Continuar?')) return;
   localStorage.removeItem(STORAGE_KEY);
   assignData(seedData());
   migrateData();
@@ -705,28 +734,31 @@ function wireEvents(){
     } else if(action === 'eliminar'){
       var tipoDel = el.dataset.tipo;
       var expidDel = el.dataset.expid;
-      var esDeudaDel = tipoDel === 'deuda';
-      var msgConfirmDel = esDeudaDel
-        ? '¿Eliminar esta deuda? Se borra también su historial de pagos. Esta acción no se puede deshacer.'
-        : '¿Eliminar este gasto? Esta acción no se puede deshacer.';
-      if(confirm(msgConfirmDel)){
-        if(tipoDel === 'fijo' || tipoDel === 'variable'){
-          // Para gastos fijos/variables ofrecemos un "Deshacer" de 6s (no
-          // así para deudas/metas, donde basta el confirm).
-          var respaldo = eliminarConRespaldo(tipoDel, expidDel);
-          renderAll();
-          if(respaldo){
-            showToastAccion('Gasto eliminado.', 'Deshacer', function(){
-              restaurarGastoEliminado(tipoDel, respaldo);
-            }, 6000);
-          } else {
-            showToast('Gasto eliminado.');
-          }
+      // El texto del aviso cambia según si esta eliminación se puede
+      // deshacer (fijo/variable, con un "Deshacer" de 6 segundos) o es
+      // definitiva (ahorro/deuda) — y llama a cada cosa por su nombre, no
+      // "gasto" para una meta de ahorro que en realidad no lo es.
+      if(tipoDel === 'fijo' || tipoDel === 'variable'){
+        if(!confirm('¿Eliminar este gasto? Vas a poder deshacerlo durante los próximos segundos después de borrarlo.')) return;
+        var respaldo = eliminarConRespaldo(tipoDel, expidDel);
+        renderAll();
+        if(respaldo){
+          showToastAccion('Gasto eliminado.', 'Deshacer (6s)', function(){
+            restaurarGastoEliminado(tipoDel, respaldo);
+          }, 6000);
         } else {
-          removeExpense(tipoDel, expidDel);
-          renderAll();
-          showToast(esDeudaDel ? 'Deuda eliminada.' : 'Gasto eliminado.');
+          showToast('Gasto eliminado.');
         }
+      } else if(tipoDel === 'ahorro'){
+        if(!confirm('¿Eliminar esta meta de ahorro? Esta acción no se puede deshacer.')) return;
+        removeExpense(tipoDel, expidDel);
+        renderAll();
+        showToast('Meta de ahorro eliminada.');
+      } else if(tipoDel === 'deuda'){
+        if(!confirm('¿Eliminar esta deuda? Se borra también su historial de pagos. Esta acción no se puede deshacer.')) return;
+        removeExpense(tipoDel, expidDel);
+        renderAll();
+        showToast('Deuda eliminada.');
       }
     } else if(action === 'ver-dia'){
       openDiaModal(el.dataset.fecha);
@@ -757,7 +789,7 @@ function wireEvents(){
       var respaldoDiario = eliminarDailyConRespaldo(el.dataset.id);
       renderAll();
       if(respaldoDiario){
-        showToastAccion('Gasto eliminado.', 'Deshacer', function(){
+        showToastAccion('Gasto eliminado.', 'Deshacer (6s)', function(){
           restaurarDailyEliminado(respaldoDiario);
         }, 6000);
       }
